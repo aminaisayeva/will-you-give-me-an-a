@@ -112,12 +112,22 @@ export default function Page() {
   const [clock, setClock] = useState("");
   const [noAttempts, setNoAttempts] = useState(0);
   const [accepted, setAccepted] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(true);
 
   useEffect(() => {
     const tick = () => setClock(formatMacClock(new Date()));
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
+  }, []);
+
+  // Escape closes the popup, like a real macOS window.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDialogOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   const confetti: ConfettiPiece[] = useMemo(() => {
@@ -274,6 +284,22 @@ export default function Page() {
 
       {/* Desktop files, for flavor */}
       <div className="absolute right-5 top-12 z-10 flex flex-col items-center gap-5">
+        <button
+          type="button"
+          onClick={() => setDialogOpen(true)}
+          aria-label="Open Grade Request"
+          className="group flex w-24 flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/10"
+        >
+          <span className="text-[34px] drop-shadow-lg">{"\u{1F170}\uFE0F"}</span>
+          <span className="rounded px-1 text-center text-[11px] leading-tight text-white/95 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] group-hover:bg-[#0a84ff]">
+            Grade Request.app
+          </span>
+          {!dialogOpen && (
+            <span className="text-[10px] leading-tight text-white/70 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+              click to reopen
+            </span>
+          )}
+        </button>
         <div className="flex w-24 flex-col items-center gap-1">
           <span className="text-[34px] drop-shadow-lg">{"\u{1F4C4}"}</span>
           <span className="rounded px-1 text-center text-[11px] leading-tight text-white/95 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
@@ -309,6 +335,7 @@ export default function Page() {
       )}
 
       {/* Centered alert dialog */}
+      {dialogOpen && (
       <main className="absolute inset-0 flex items-center justify-center px-4 pb-28 pt-10">
         <div
           style={{
@@ -332,7 +359,17 @@ export default function Page() {
               style={{ background: "linear-gradient(180deg, #f7f7f7, #ececec)" }}
             >
               <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full border border-black/10 bg-[#ff5f57]" />
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(false)}
+                  aria-label="Close"
+                  title="Close"
+                  className="group/close flex h-3 w-3 items-center justify-center rounded-full border border-black/10 bg-[#ff5f57] hover:brightness-95"
+                >
+                  <span className="hidden text-[9px] font-bold leading-none text-black/60 group-hover/close:inline">
+                    ×
+                  </span>
+                </button>
                 <span className="h-3 w-3 rounded-full border border-black/10 bg-[#febc2e]" />
                 <span className="h-3 w-3 rounded-full border border-black/10 bg-[#28c840]" />
               </div>
@@ -390,6 +427,7 @@ export default function Page() {
           </div>
         </div>
       </main>
+      )}
 
       {/* Dock */}
       <nav className="absolute bottom-2 left-1/2 z-40 flex -translate-x-1/2 items-end gap-3 rounded-2xl border border-white/25 bg-white/15 px-3 pb-2 pt-2 shadow-2xl backdrop-blur-2xl">
