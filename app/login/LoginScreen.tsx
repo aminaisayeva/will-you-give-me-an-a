@@ -41,7 +41,7 @@ function GoogleG() {
 
 // The translucent rounded field from the macOS login window.
 const pillInput =
-  "h-8 w-full rounded-full border border-white/30 bg-white/20 px-3.5 text-[13px] text-white shadow-inner outline-none backdrop-blur-2xl placeholder:text-white/60 focus:border-white/60 focus:bg-white/25";
+  "glass-input h-8 w-full rounded-full border border-white/30 bg-white/20 px-3.5 text-[13px] text-white shadow-inner outline-none backdrop-blur-2xl placeholder:text-white/60 focus:border-white/60 focus:bg-white/25";
 
 function ArrowButton({ pending, label }: { pending: boolean; label: string }) {
   return (
@@ -321,12 +321,16 @@ function CreateAccount({ onCancel }: { onCancel: () => void }) {
             </div>
             <input name="email" type="email" required autoComplete="email" placeholder="Email" aria-label="Email" className={pillInput} />
             <input name="password" type="password" required minLength={MIN_PASSWORD} autoComplete="new-password" placeholder={`Password (${MIN_PASSWORD}+ characters)`} aria-label="Password" className={pillInput} />
-            <div className="relative">
-              <input name="verify" type="password" required minLength={MIN_PASSWORD} autoComplete="new-password" placeholder="Verify password" aria-label="Verify password" className={`${pillInput} pr-9`} />
-              <ArrowButton pending={pending} label="Create account" />
-            </div>
+            <input name="verify" type="password" required minLength={MIN_PASSWORD} autoComplete="new-password" placeholder="Verify password" aria-label="Verify password" className={pillInput} />
           </div>
         </Shake>
+        <button
+          type="submit"
+          disabled={pending}
+          className="mt-3 flex h-8 w-full items-center justify-center rounded-full bg-white/90 text-[13px] font-semibold text-gray-900 shadow-lg hover:bg-white disabled:opacity-70"
+        >
+          {pending ? "Creating Account…" : "Sign Up"}
+        </button>
       </form>
       <p role="alert" className="mt-2 min-h-[18px] text-[12px] text-white/90">
         {state.error}

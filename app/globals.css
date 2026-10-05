@@ -38,3 +38,13 @@ body {
   60% { transform: translateX(-6px); }
   80% { transform: translateX(3px); }
 }
+
+/* Keep Chrome's autofill from painting the lock screen's glass fields white. */
+.glass-input:-webkit-autofill,
+.glass-input:-webkit-autofill:hover,
+.glass-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px rgba(118, 104, 190, 0.92) inset;
+  transition: background-color 9999s ease-out 0s;
+}
