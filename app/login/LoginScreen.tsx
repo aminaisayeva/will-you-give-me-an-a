@@ -268,7 +268,15 @@ function SignIn({
         {error}
       </p>
 
-      <div className="mt-1 flex w-full items-center gap-2 text-[11px] text-white/60">
+      <button
+        type="button"
+        onClick={onCreate}
+        className="flex h-8 w-full items-center justify-center rounded-full border border-white/30 bg-white/20 text-[13px] font-medium text-white shadow-lg backdrop-blur-2xl hover:bg-white/30"
+      >
+        Create Account
+      </button>
+
+      <div className="mt-4 flex w-full items-center gap-2 text-[11px] text-white/60">
         <span className="h-px flex-1 bg-white/25" /> or <span className="h-px flex-1 bg-white/25" />
       </div>
 
@@ -280,10 +288,6 @@ function SignIn({
       >
         <GoogleG />
         {googlePending ? "Opening Google…" : "Sign in with Google"}
-      </button>
-
-      <button type="button" onClick={onCreate} className="mt-4 text-[12px] text-white/85 hover:text-white hover:underline">
-        Create Account…
       </button>
     </>
   );

@@ -24,7 +24,15 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error || !data.user) return fail(error?.message ?? "Could not sign you in.");
+  if (error || !data.user) {
+    // The PKCE verifier cookie lives on the site where sign-in started; it's
+    // missing if Google sent us back to a different address.
+    return fail(
+      error?.message.includes("code verifier")
+        ? "Sign-in started on a different address of this site. Please try again here."
+        : (error?.message ?? "Could not sign you in."),
+    );
+  }
 
   // First sign-in (or names never filled in): send them to the setup assistant.
   const { data: profile } = await supabase

@@ -37,7 +37,16 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+
+  // If Supabase falls back to the Site URL (e.g. the redirect URL wasn't on its
+  // allowlist), the OAuth code lands on some other page. Finish sign-in anyway.
+  if (searchParams.has("code") && pathname !== "/auth/callback") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    url.search = `?code=${encodeURIComponent(searchParams.get("code")!)}`;
+    return NextResponse.redirect(url);
+  }
   const redirectTo = (path: string) => {
     const url = request.nextUrl.clone();
     url.pathname = path;
