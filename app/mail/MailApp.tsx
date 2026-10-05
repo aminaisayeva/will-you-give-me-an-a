@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
   useTransition,
 } from "react";
+import MenuBar, { type MenuAccount } from "@/components/MenuBar";
 import type { Email } from "@/lib/supabase";
 import { FONT_STACK, WALLPAPER } from "@/lib/desktop-theme";
 import { sendEmail, type SendState } from "./actions";
@@ -52,12 +53,18 @@ function initials(name: string) {
     .join("");
 }
 
+type Sender = { name: string; email: string };
+
 export default function MailApp({
   emails,
   loadError,
+  account,
+  sender,
 }: {
   emails: Email[];
   loadError: string | null;
+  account: MenuAccount | null;
+  sender: Sender | null;
 }) {
   const router = useRouter();
   const [folder, setFolder] = useState<Folder>("inbox");
@@ -136,18 +143,14 @@ export default function MailApp({
       style={{ fontFamily: FONT_STACK, background: WALLPAPER }}
     >
       {/* Menu bar */}
-      <header className="absolute inset-x-0 top-0 z-40 flex h-7 items-center justify-between border-b border-white/10 bg-black/30 px-4 text-[13px] text-white/90 backdrop-blur-md">
-        <div className="flex items-center gap-4">
-          <span aria-hidden="true" className="text-[15px] leading-none">{""}</span>
-          <span className="font-semibold">Mail</span>
-          <Link href="/" className="hover:text-white">
-            ← Desktop
-          </Link>
-        </div>
-        <span className="hidden text-white/70 sm:inline">
+      <MenuBar appName="Mail" account={account}>
+        <Link href="/" className="hover:text-white">
+          ← Desktop
+        </Link>
+        <span className="hidden text-white/70 md:inline">
           {emails.length} messages from Supabase
         </span>
-      </header>
+      </MenuBar>
 
       {/* Window */}
       <main className="absolute inset-0 flex items-center justify-center px-2 pb-3 pt-10 sm:px-6 sm:pb-6">
@@ -357,6 +360,7 @@ export default function MailApp({
           action={sendAction}
           pending={sending}
           error={sendState.error}
+          accountSender={sender}
           onClose={() => setComposeOpen(false)}
         />
       )}
@@ -381,15 +385,18 @@ function Compose({
   action,
   pending,
   error,
+  accountSender,
   onClose,
 }: {
   action: (formData: FormData) => void;
   pending: boolean;
   error: string | null;
+  accountSender: Sender | null;
   onClose: () => void;
 }) {
+  // Signed-in users send as themselves. Otherwise remember the last sender;
   // Compose only mounts after a click, so reading localStorage here is safe.
-  const [sender] = useState(loadSender);
+  const [sender] = useState(() => accountSender ?? loadSender());
   const inputClass =
     "min-w-0 flex-1 bg-transparent py-2 text-[13px] outline-none placeholder:text-gray-300";
 

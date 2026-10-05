@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { getSupabase, type Email } from "@/lib/supabase";
+import { getAccount } from "@/lib/auth";
+import { toMenuAccount } from "@/lib/menu-account";
+import { displayName, getSupabase, type Email } from "@/lib/supabase";
 import MailApp from "./MailApp";
 
 export const metadata: Metadata = {
@@ -27,5 +29,17 @@ export default async function MailPage() {
     loadError = err instanceof Error ? err.message : "Unknown error";
   }
 
-  return <MailApp emails={emails} loadError={loadError} />;
+  const account = await getAccount();
+  const sender = account
+    ? { name: displayName(account.profile, ""), email: account.user.email ?? "" }
+    : null;
+
+  return (
+    <MailApp
+      emails={emails}
+      loadError={loadError}
+      account={toMenuAccount(account)}
+      sender={sender}
+    />
+  );
 }

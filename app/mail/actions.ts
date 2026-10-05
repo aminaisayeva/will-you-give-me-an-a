@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { getSupabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export type SendState = { ok: boolean; error: string | null; sentAt: number };
 
@@ -30,14 +30,21 @@ export async function sendEmail(
   if (!subject || subject.length > 200) return fail("Subject is required (max 200 characters).");
   if (!body || body.length > 5000) return fail("Message is required (max 5000 characters).");
 
-  // The table's row level security only lets the public insert into "sent".
-  const { error } = await getSupabase().from("emails").insert({
+  // Send as the signed-in user when there is one. Row level security only lets
+  // the public insert into "sent", and only with their own sender_id.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("emails").insert({
     folder: "sent",
     sender_name: senderName,
     sender_email: senderEmail,
     recipient_email: recipient,
     subject,
     body,
+    sender_id: user?.id ?? null,
   });
 
   if (error) return fail(`Could not send: ${error.message}`);
