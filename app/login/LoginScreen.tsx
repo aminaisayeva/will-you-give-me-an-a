@@ -217,8 +217,13 @@ function SignIn({
     setGooglePending(true);
     const { error } = await createClient().auth.signInWithOAuth({
       provider: "google",
-      // Exactly /auth/callback, no extra query params.
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        // Exactly /auth/callback, no extra query params.
+        redirectTo: `${window.location.origin}/auth/callback`,
+        // Always show Google's account chooser, so after logging out you can
+        // pick a different account instead of being signed straight back in.
+        queryParams: { prompt: "select_account" },
+      },
     });
     if (error) {
       setGoogleError(error.message);
