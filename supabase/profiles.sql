@@ -97,3 +97,46 @@ create policy "Users can replace their own avatar"
 create policy "Users can delete their own avatar"
   on storage.objects for delete to authenticated
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- ---------------------------------------------------------------------------
+-- Migration "password_support": email/password accounts.
+
+-- Email sign-ups may pass their name in user metadata; Google sign-ups don't,
+-- so those users are still asked for it after their first sign-in.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, email, first_name, last_name)
+  values (
+    new.id,
+    new.email,
+    nullif(trim(new.raw_user_meta_data ->> 'first_name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'last_name'), '')
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
+-- Whether the signed-in user has a password yet (Google-only users don't).
+-- Only exposes a boolean about the caller's own account.
+create function public.has_password()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(encrypted_password is not null and encrypted_password <> '', false)
+  from auth.users
+  where id = (select auth.uid());
+$$;
+
+revoke execute on function public.has_password() from public, anon;
+grant execute on function public.has_password() to authenticated;

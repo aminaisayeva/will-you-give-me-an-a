@@ -26,6 +26,7 @@ export type Profile = {
 export const AVATAR_BUCKET = "avatars";
 // Vercel functions accept request bodies up to 4.5 MB.
 export const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
+export const MIN_PASSWORD = 8;
 
 // A stateless client with no user session, for public reads.
 export function getSupabase() {

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { hasFullName } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
+import { UNLOCK_COOKIE, unlockCookieOptions } from "@/lib/lock";
 
 // Google redirects here (via Supabase) with a one-time code after sign-in.
 export async function GET(request: NextRequest) {
@@ -32,5 +33,7 @@ export async function GET(request: NextRequest) {
     .eq("id", data.user.id)
     .maybeSingle();
 
-  return NextResponse.redirect(`${base}${hasFullName(profile) ? "/" : "/welcome"}`);
+  const response = NextResponse.redirect(`${base}${hasFullName(profile) ? "/" : "/welcome"}`);
+  response.cookies.set(UNLOCK_COOKIE, "1", unlockCookieOptions);
+  return response;
 }

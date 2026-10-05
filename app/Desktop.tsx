@@ -68,7 +68,7 @@ const DOCK_APPS: DockApp[] = [
     glyph: "⚙️",
     label: "System Settings",
     bg: "linear-gradient(180deg, #e3e3e8 0%, #8e8e98 100%)",
-    href: "/profile",
+    href: "/settings/profile",
   },
 ];
 
@@ -258,6 +258,21 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
             definitely_human.txt
           </span>
         </div>
+        <Link
+          href={account ? "/settings/profile" : "/login"}
+          aria-label="Open System Settings"
+          className="group flex w-24 flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/10"
+        >
+          <span
+            className="flex h-12 w-12 items-center justify-center rounded-xl text-[28px] shadow-lg ring-1 ring-white/25"
+            style={{ background: "linear-gradient(180deg, #e3e3e8 0%, #8e8e98 100%)" }}
+          >
+            ⚙️
+          </span>
+          <span className="rounded px-1 text-center text-[11px] leading-tight text-white/95 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] group-hover:bg-[#0a84ff]">
+            Settings
+          </span>
+        </Link>
       </div>
 
       {/* Attempt-counter toast (macOS notification style) */}

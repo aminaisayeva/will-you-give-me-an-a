@@ -17,13 +17,17 @@ Click the **Mail** icon in the dock to open `/mail`, a macOS-style Mail window.
 - **New Message** sends an email through a Server Action, which inserts a row into `emails`. It then appears in **Sent**.
 - Row level security lets the public read and insert into `sent` only. The schema lives in `supabase/emails.sql`.
 
-## Accounts (Supabase Auth + Google)
+## Accounts (Supabase Auth: email/password + Google)
 
-- **`/login`** looks like the macOS lock screen. **Sign in with Google** goes through Supabase Auth and comes back to **`/auth/callback`**.
-- New users get a row in **`profiles`** from a trigger on `auth.users`. `first_name` and `last_name` start out null, so the first sign-in opens **`/welcome`** (a Setup Assistant) to ask for them.
-- **`/profile`** (System Settings in the dock) changes your name and uploads a photo. Photos go to the public `avatars` Storage bucket, and the table only stores the file path.
-- **`/transcript`** (`final_grade.pdf` on the desktop) is the gated route. Signed-out visitors get redirected to `/login`.
-- `proxy.ts` refreshes the session cookie on every request and redirects signed-out users away from gated routes. Each gated page checks the user again on the server.
+- **Lock screen first.** Every new browser session starts at **`/login`**, which looks like the macOS lock screen. Signed out, it says *Hello, stranger* and offers email + password, **Sign in with Google**, **Create Account…** and **Guest User**. Signed in, it says *Hello, {first name}* with **Continue** and **Log Out**. A session cookie (`mac-unlocked`) remembers that you got past it. ** menu → Lock Screen** brings you back.
+- Google sends people back to exactly **`/auth/callback`**. If the Google provider isn't switched on in Supabase, the button explains that instead of failing.
+- New users get a row in **`profiles`** from a trigger on `auth.users`. Email sign-ups pass their name. Google sign-ups start with null names, so they land on **`/welcome`** (a Setup Assistant) to fill them in.
+- **System Settings** (the ⚙️ icon on the desktop or in the dock, the  menu, or the account menu) lives at **`/settings`**:
+  - **Profile**: upload, change or remove a photo. Photos go to the public `avatars` Storage bucket, and the table only stores the path.
+  - **Users & Groups**: first name and last name.
+  - **Login Password**: a macOS-style Change Password sheet (old, new, verify). Google-only accounts can set a password here.
+- **`/transcript`** (`final_grade.pdf` on the desktop) is the gated route. Signed-out visitors and guests are sent to `/login`.
+- `proxy.ts` refreshes the session, enforces the lock screen and guards gated routes. Each gated page checks the user again on the server.
 - Mail sent while signed in records your `sender_id`. The schema lives in `supabase/profiles.sql`.
 
 ### Google OAuth setup

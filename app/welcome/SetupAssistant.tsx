@@ -3,9 +3,9 @@
 import { useActionState } from "react";
 import MacWindow from "@/components/MacWindow";
 import { FONT_STACK, WALLPAPER } from "@/lib/desktop-theme";
-import { completeSetup, type ProfileState } from "@/app/profile/actions";
+import { completeSetup, type FormState } from "@/app/settings/actions";
 
-const INITIAL: ProfileState = { ok: false, error: null, savedAt: 0 };
+const INITIAL: FormState = { ok: false, error: null, savedAt: 0 };
 
 export default function SetupAssistant({
   email,
@@ -71,7 +71,7 @@ export default function SetupAssistant({
           </p>
 
           <div className="mt-5 flex items-center justify-between border-t border-black/10 pt-4">
-            <span className="text-[11px] text-gray-400">You can change this later in Profile.</span>
+            <span className="text-[11px] text-gray-400">You can change this later in System Settings.</span>
             <button
               type="submit"
               disabled={pending}
