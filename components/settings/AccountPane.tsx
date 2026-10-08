@@ -2,8 +2,8 @@
 
 import { useActionState } from "react";
 import Avatar from "@/components/Avatar";
-import { updateName, type FormState } from "../actions";
-import { Group, primaryButton, Row, Status, textField } from "../ui";
+import { updateName, type FormState } from "@/app/actions/settings";
+import { Group, primaryButton, Row, Status, textField } from "@/components/settings/ui";
 
 const INITIAL: FormState = { ok: false, error: null, savedAt: 0 };
 

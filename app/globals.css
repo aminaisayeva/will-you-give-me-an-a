@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* dark: follows the desktop's dark-mode toggle (a .dark class), not the OS. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

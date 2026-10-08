@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import MacWindow from "@/components/MacWindow";
 import { FONT_STACK, WALLPAPER } from "@/lib/desktop-theme";
-import { completeSetup, type FormState } from "@/app/settings/actions";
+import { completeSetup, type FormState } from "@/app/actions/settings";
 
 const INITIAL: FormState = { ok: false, error: null, savedAt: 0 };
 

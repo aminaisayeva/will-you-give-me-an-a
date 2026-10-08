@@ -1,19 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   useActionState,
+  useCallback,
+  useEffect,
   useMemo,
   useState,
   useSyncExternalStore,
   useTransition,
 } from "react";
-import MenuBar, { type MenuAccount } from "@/components/MenuBar";
+import { useAccount } from "@/components/os/AccountContext";
+import SignInPrompt from "@/components/os/SignInPrompt";
 import type { Email } from "@/lib/supabase";
-import { FONT_STACK, WALLPAPER } from "@/lib/desktop-theme";
-import { sendEmail, type SendState } from "./actions";
-import { getServerSnapshot, getSnapshot, markRead, subscribe } from "./read-store";
+import { listEmails, sendEmail, type SendState } from "@/app/actions/mail";
+import { getServerSnapshot, getSnapshot, markRead, subscribe } from "@/lib/mail-read-store";
 
 type Folder = "inbox" | "sent";
 
@@ -55,24 +55,37 @@ function initials(name: string) {
 
 type Sender = { name: string; email: string };
 
-export default function MailApp({
-  emails,
-  loadError,
-  account,
-  sender,
-}: {
-  emails: Email[];
-  loadError: string | null;
-  account: MenuAccount | null;
-  sender: Sender | null;
-}) {
-  const router = useRouter();
+export default function MailWindow() {
+  const account = useAccount();
+  if (!account) return <SignInPrompt app="Mail" glyph={"\u{1F4E7}"} reason="Sign in to read the inbox and send mail." />;
+  return <MailApp sender={{ name: account.name, email: account.email ?? "" }} />;
+}
+
+function MailApp({ sender }: { sender: Sender }) {
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [folder, setFolder] = useState<Folder>("inbox");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeKey, setComposeKey] = useState(0);
   const [refreshing, startRefresh] = useTransition();
+
+  const reload = useCallback(
+    () =>
+      startRefresh(async () => {
+        const result = await listEmails();
+        setEmails(result.emails);
+        setLoadError(result.error);
+        setLoaded(true);
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const readJson = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const readIds = useMemo(() => new Set<string>(JSON.parse(readJson)), [readJson]);
@@ -111,18 +124,8 @@ export default function MailApp({
     async (prev: SendState, formData: FormData) => {
       const result = await sendEmail(prev, formData);
       if (result.ok) {
-        try {
-          window.localStorage.setItem(
-            "will-you-give-me-an-a:mail:sender",
-            JSON.stringify({
-              name: formData.get("sender_name"),
-              email: formData.get("sender_email"),
-            }),
-          );
-        } catch {
-          /* ignore */
-        }
         setComposeOpen(false);
+        reload();
         setFolder("sent");
         setSelectedId(null);
         setQuery("");
@@ -138,49 +141,17 @@ export default function MailApp({
   };
 
   return (
-    <div
-      className="fixed inset-0 overflow-hidden text-gray-900"
-      style={{ fontFamily: FONT_STACK, background: WALLPAPER }}
-    >
-      {/* Menu bar */}
-      <MenuBar appName="Mail" account={account}>
-        <Link href="/" className="hover:text-white">
-          ← Desktop
-        </Link>
-        <span className="hidden text-white/70 md:inline">
-          {emails.length} messages from Supabase
-        </span>
-      </MenuBar>
-
-      {/* Window */}
-      <main className="absolute inset-0 flex items-center justify-center px-2 pb-3 pt-10 sm:px-6 sm:pb-6">
-        <div
-          className="flex h-full w-full max-w-[1120px] flex-col overflow-hidden rounded-xl bg-white/95 backdrop-blur-xl"
-          style={{
-            boxShadow: "0 30px 70px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.25)",
-          }}
-        >
-          {/* Title bar + toolbar */}
-          <div
-            className="relative flex h-11 shrink-0 items-center gap-3 border-b border-black/10 px-3"
-            style={{ background: "linear-gradient(180deg, #f7f7f7, #ececec)" }}
-          >
-            <div className="flex items-center gap-2">
-              <Link
-                href="/"
-                aria-label="Close Mail"
-                className="h-3 w-3 rounded-full border border-black/10 bg-[#ff5f57]"
-              />
-              <span className="h-3 w-3 rounded-full border border-black/10 bg-[#febc2e]" />
-              <span className="h-3 w-3 rounded-full border border-black/10 bg-[#28c840]" />
-            </div>
-            <span className="pointer-events-none absolute inset-0 hidden items-center justify-center text-[13px] font-semibold text-gray-600 md:flex">
-              {FOLDERS.find((f) => f.id === folder)?.label} — Mail
+    <div className="relative flex h-full flex-col text-gray-900">
+          {/* Toolbar */}
+          <div className="relative flex h-11 shrink-0 items-center gap-3 border-b border-black/10 bg-[#f6f6f6] px-3">
+            <span className="text-[13px] font-semibold text-gray-600">
+              {FOLDERS.find((f) => f.id === folder)?.label}
+              <span className="ml-2 font-normal text-gray-400">{loaded ? `${emails.length} messages` : "Loading…"}</span>
             </span>
             <div className="ml-auto flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => startRefresh(() => router.refresh())}
+                onClick={reload}
                 className="rounded-md px-2 py-1 text-[13px] text-gray-600 hover:bg-black/5"
                 title="Get new mail"
               >
@@ -351,8 +322,6 @@ export default function MailApp({
               )}
             </article>
           </div>
-        </div>
-      </main>
 
       {composeOpen && (
         <Compose
@@ -368,19 +337,6 @@ export default function MailApp({
   );
 }
 
-function loadSender(): { name: string; email: string } {
-  try {
-    const raw = window.localStorage.getItem("will-you-give-me-an-a:mail:sender");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return { name: String(parsed.name ?? ""), email: String(parsed.email ?? "") };
-    }
-  } catch {
-    /* ignore */
-  }
-  return { name: "", email: "" };
-}
-
 function Compose({
   action,
   pending,
@@ -391,17 +347,16 @@ function Compose({
   action: (formData: FormData) => void;
   pending: boolean;
   error: string | null;
-  accountSender: Sender | null;
+  accountSender: Sender;
   onClose: () => void;
 }) {
-  // Signed-in users send as themselves. Otherwise remember the last sender;
-  // Compose only mounts after a click, so reading localStorage here is safe.
-  const [sender] = useState(() => accountSender ?? loadSender());
+  // Signed-in users send as themselves.
+  const sender = accountSender;
   const inputClass =
     "min-w-0 flex-1 bg-transparent py-2 text-[13px] outline-none placeholder:text-gray-300";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-3">
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 px-3">
       <form
         action={action}
         className="flex max-h-[90vh] w-full max-w-[620px] flex-col overflow-hidden rounded-xl bg-white"

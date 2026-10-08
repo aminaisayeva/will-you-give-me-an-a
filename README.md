@@ -9,13 +9,29 @@ A Next.js app styled as a macOS desktop, with a system popup that asks the only 
 - **Yes** — always works. 🎉
 - **No** — never works. Every attempt makes **Yes** bigger. After 20 attempts, YES takes over the entire screen.
 
+## AminaOS desktop
+
+Everything opens as a draggable, resizable window on one desktop, ported from my AminaOS project: Safari, Mail, Terminal, Calendar, Photos, Files + Text Viewer, About Me, Education, Contact, Help, Sudoku, Trash, System Settings and final_grade.pdf. Menu bar ( menu, Go, Help), Dock, draggable desktop icons, Spotlight (⌘K) and dark mode included. URLs deep-link into windows: `/mail`, `/terminal`, `/settings/password`, `/transcript`, `/safari/<address>`.
+
+## Safari: AI-built websites (assignment 4)
+
+Type a web address that doesn't exist (`bodega-cats.nyc`) or describe a site, and **Gemini** builds it as a single-file web page. The generated "internet" is shared: an address someone already built just opens.
+
+- **Generate** (`POST /api/sites`, signed-in only, 20 per user per day). The page, the user's prompt, the exact system prompt and the model name are saved in `sites`.
+- **Rate**: signed-in users upvote/downvote other people's sites. Each vote is a row in `site_votes`; a trigger keeps `sites.upvotes/downvotes/score` in sync. Start page tabs: Trending (this week), New, All-Time, My Sites. Shareable links: `/safari/<address>`.
+- **Sandboxed**: generated HTML is served from `/s/<address>` with a CSP `sandbox allow-scripts` header (opaque origin: no cookies, no storage, no network) and shown in a sandboxed iframe.
+- **Strict RLS on every table** (`supabase/sites.sql`): anyone can read sites; only signed-in users create sites (as themselves, with trigger-maintained counts and author name they can't write); votes are private to the voter and you can't vote on your own site; mail is signed-in only (shared inbox + your own sent mail); profiles allow editing only your name and photo.
+- Terminal: `safari <idea>` builds a site, `ls -l ~/Sites` lists them, `open <address>` visits one.
+
+Set `GEMINI_API_KEY` (from aistudio.google.com) and optionally `GEMINI_MODEL` (default `gemini-2.5-flash`) in `.env.local` and in Vercel.
+
 ## Mail app (Supabase)
 
 Click the **Mail** icon in the dock to open `/mail`, a macOS-style Mail window.
 
 - **Inbox** and **Sent** list rows from the `emails` table in Supabase, fetched on every request.
 - **New Message** sends an email through a Server Action, which inserts a row into `emails`. It then appears in **Sent**.
-- Row level security lets the public read and insert into `sent` only. The schema lives in `supabase/emails.sql`.
+- Signed-in users see the shared inbox and only the mail they sent; they can only send as themselves (RLS). The schema lives in `supabase/emails.sql` and `supabase/sites.sql`.
 
 ## Accounts (Supabase Auth: email/password + Google)
 

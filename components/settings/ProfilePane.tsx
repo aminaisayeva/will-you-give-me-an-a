@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
 import { MAX_AVATAR_BYTES } from "@/lib/supabase";
-import { updatePhoto, type FormState } from "../actions";
-import { Group, primaryButton, pushButton, Row, Status } from "../ui";
+import { useOS } from "@/lib/os/store";
+import { updatePhoto, type FormState } from "@/app/actions/settings";
+import { Group, primaryButton, pushButton, Row, Status } from "@/components/settings/ui";
 
 const INITIAL: FormState = { ok: false, error: null, savedAt: 0 };
 
@@ -117,14 +117,14 @@ export default function ProfilePane({
 
       <Group>
         <Row label="Name & Account" detail="First name, last name">
-          <Link href="/settings/account" className="text-[13px] text-gray-500 hover:text-gray-900">
+          <button type="button" onClick={() => useOS.getState().openWindow("settings", { pane: "account" })} className="text-[13px] text-gray-500 hover:text-gray-900">
             {name} ›
-          </Link>
+          </button>
         </Row>
         <Row label="Login Password" detail={hasPassword ? "Password set" : "Signs in with Google only"}>
-          <Link href="/settings/password" className="text-[13px] text-gray-500 hover:text-gray-900">
+          <button type="button" onClick={() => useOS.getState().openWindow("settings", { pane: "password" })} className="text-[13px] text-gray-500 hover:text-gray-900">
             {hasPassword ? "Change" : "Set Up"} ›
-          </Link>
+          </button>
         </Row>
         <Row label="Member Since">
           <span className="text-[13px] text-gray-500">

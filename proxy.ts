@@ -4,10 +4,11 @@ import { UNLOCK_COOKIE } from "@/lib/lock";
 
 // Routes that need a signed-in user. Pages re-check the user themselves; this
 // is the fast, optimistic redirect.
-const PROTECTED = ["/transcript", "/settings", "/welcome"];
+const PROTECTED = ["/transcript", "/settings", "/mail", "/welcome"];
 
 // Pages that are reachable while the screen is still locked.
-const LOCK_EXEMPT = ["/login", "/auth"];
+// /s/* serves generated sites (shareable links), /api/* answers fetches.
+const LOCK_EXEMPT = ["/login", "/auth", "/s", "/api"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

@@ -1,45 +1,8 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
-import { getAccount } from "@/lib/auth";
-import { toMenuAccount } from "@/lib/menu-account";
-import { displayName, getSupabase, type Email } from "@/lib/supabase";
-import MailApp from "./MailApp";
+import { renderDesktop } from "@/lib/desktop";
 
-export const metadata: Metadata = {
-  title: "Mail · Will you give me an A?",
-  description: "A macOS-style Mail app backed by a Supabase table.",
-};
+export const metadata: Metadata = { title: "Mail · Will you give me an A?" };
 
 export default async function MailPage() {
-  // Render per request so new rows show up without a redeploy.
-  await connection();
-
-  let emails: Email[] = [];
-  let loadError: string | null = null;
-
-  try {
-    const { data, error } = await getSupabase()
-      .from("emails")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
-    if (error) loadError = error.message;
-    else emails = data ?? [];
-  } catch (err) {
-    loadError = err instanceof Error ? err.message : "Unknown error";
-  }
-
-  const account = await getAccount();
-  const sender = account
-    ? { name: displayName(account.profile, ""), email: account.user.email ?? "" }
-    : null;
-
-  return (
-    <MailApp
-      emails={emails}
-      loadError={loadError}
-      account={toMenuAccount(account)}
-      sender={sender}
-    />
-  );
+  return renderDesktop([{ id: "mail" }]);
 }

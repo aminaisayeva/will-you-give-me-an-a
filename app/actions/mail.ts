@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
+import type { Email } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
 
 export type SendState = { ok: boolean; error: string | null; sentAt: number };
@@ -30,12 +30,13 @@ export async function sendEmail(
   if (!subject || subject.length > 200) return fail("Subject is required (max 200 characters).");
   if (!body || body.length > 5000) return fail("Message is required (max 5000 characters).");
 
-  // Send as the signed-in user when there is one. Row level security only lets
-  // the public insert into "sent", and only with their own sender_id.
+  // Row level security only lets signed-in users insert into "sent"; the
+  // database stamps sender_id with their id.
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return fail("Sign in to send mail.");
 
   const { error } = await supabase.from("emails").insert({
     folder: "sent",
@@ -44,11 +45,27 @@ export async function sendEmail(
     recipient_email: recipient,
     subject,
     body,
-    sender_id: user?.id ?? null,
   });
 
   if (error) return fail(`Could not send: ${error.message}`);
 
-  refresh();
   return { ok: true, error: null, sentAt: Date.now() };
+}
+
+export type MailList = { emails: Email[]; error: string | null; signedIn: boolean };
+
+// The shared inbox plus the signed-in user's own sent mail (enforced by RLS).
+export async function listEmails(): Promise<MailList> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { emails: [], error: null, signedIn: false };
+
+  const { data, error } = await supabase
+    .from("emails")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  return { emails: (data as Email[]) ?? [], error: error?.message ?? null, signedIn: true };
 }

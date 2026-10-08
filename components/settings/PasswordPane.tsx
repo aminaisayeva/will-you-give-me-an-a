@@ -2,8 +2,8 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { MIN_PASSWORD } from "@/lib/supabase";
-import { changePassword, type FormState } from "../actions";
-import { Group, primaryButton, pushButton, Row, Status } from "../ui";
+import { changePassword, type FormState } from "@/app/actions/settings";
+import { Group, primaryButton, pushButton, Row, Status } from "@/components/settings/ui";
 
 const INITIAL: FormState = { ok: false, error: null, savedAt: 0 };
 
@@ -82,7 +82,7 @@ function PasswordSheet({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/25 px-3 pt-[14vh]">
+    <div className="absolute inset-0 z-50 flex items-start justify-center bg-black/25 px-3 pt-6">
       <form
         action={action}
         role="dialog"

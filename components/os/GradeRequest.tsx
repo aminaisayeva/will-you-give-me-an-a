@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import MenuBar, { type MenuAccount } from "@/components/MenuBar";
-import { FONT_STACK, WALLPAPER } from "@/lib/desktop-theme";
+import { useEffect, useState, type CSSProperties } from "react";
+import { useOS } from "@/lib/os/store";
+import { FONT_STACK } from "@/lib/desktop-theme";
 
 const MAX_NO_ATTEMPTS = 20;
 
@@ -19,64 +18,6 @@ const NO_LABELS = [
   "Denial stage detected",
   "Resistance is futile",
 ];
-
-const MENU_ITEMS = ["File", "Edit", "View", "Go", "Window", "Help"];
-
-type DockApp = {
-  glyph: string;
-  label: string;
-  bg: string;
-  running?: boolean;
-  href?: string;
-};
-
-const DOCK_APPS: DockApp[] = [
-  {
-    glyph: "\u{1F310}",
-    label: "Safari",
-    bg: "linear-gradient(180deg, #67d1ff 0%, #1d6ff2 100%)",
-    running: true,
-  },
-  {
-    glyph: "\u{1F4DD}",
-    label: "Notes",
-    bg: "linear-gradient(180deg, #fffbe8 0%, #f4d35e 100%)",
-  },
-  {
-    glyph: "\u{1F3B5}",
-    label: "Music",
-    bg: "linear-gradient(180deg, #fc5c7d 0%, #d5326f 100%)",
-  },
-  {
-    glyph: "\u{1F4F8}",
-    label: "Photos",
-    bg: "conic-gradient(from 40deg, #ff5e5e, #ffb340, #ffe14d, #6fd66f, #4dc4ff, #b06ffb, #ff5e9d, #ff5e5e)",
-  },
-  {
-    glyph: "\u{1F4AC}",
-    label: "Messages",
-    bg: "linear-gradient(180deg, #7ef07e 0%, #0fbd2e 100%)",
-    running: true,
-  },
-  {
-    glyph: "\u{1F4E7}",
-    label: "Mail",
-    bg: "linear-gradient(180deg, #4facfe 0%, #0757c9 100%)",
-    href: "/mail",
-  },
-  {
-    glyph: "⚙️",
-    label: "System Settings",
-    bg: "linear-gradient(180deg, #e3e3e8 0%, #8e8e98 100%)",
-    href: "/settings/profile",
-  },
-];
-
-const TRASH_APP: DockApp = {
-  glyph: "\u{1F5D1}\uFE0F",
-  label: "Trash",
-  bg: "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(190,196,205,0.55) 100%)",
-};
 
 const CONFETTI_GLYPHS = [
   "\u{1F389}",
@@ -97,31 +38,32 @@ type ConfettiPiece = {
   glyph: string;
 };
 
-export default function Desktop({ account }: { account: MenuAccount | null }) {
+// The original "Will you give me an A?" popup. It isn't a resizable window:
+// the dialog grows with every "No", so it stays a centred alert.
+export default function GradeRequest() {
+  const state = useOS((s) => s.windows.grade);
+  const focused = useOS((s) => s.focused === "grade");
+  const closeWindow = useOS((s) => s.closeWindow);
+  const focusWindow = useOS((s) => s.focusWindow);
+  const visible = state.open && !state.minimized;
+  const z = state.zIndex;
+  const close = () => closeWindow("grade");
+
   const [noAttempts, setNoAttempts] = useState(0);
   const [accepted, setAccepted] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(true);
+  const [celebrating, setCelebrating] = useState(false);
+  const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
 
-  // Escape closes the popup, like a real macOS window.
+  // Escape closes the popup when it's the front window, like macOS.
   useEffect(() => {
+    if (!visible || !focused) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDialogOpen(false);
+      if (e.key === "Escape") closeWindow("grade");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [visible, focused, closeWindow]);
 
-  const confetti: ConfettiPiece[] = useMemo(() => {
-    if (!accepted) return [];
-    return Array.from({ length: 44 }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      delay: -(Math.random() * 5),
-      duration: 3.2 + Math.random() * 3.8,
-      size: 16 + Math.random() * 24,
-      glyph: CONFETTI_GLYPHS[i % CONFETTI_GLYPHS.length],
-    }));
-  }, [accepted]);
 
   const yesTakeover = noAttempts >= MAX_NO_ATTEMPTS && !accepted;
   const noLabel = NO_LABELS[noAttempts % NO_LABELS.length];
@@ -132,6 +74,18 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
 
   const handleYes = () => {
     setAccepted(true);
+    setCelebrating(true);
+    // Randomised in the click handler, not during render.
+    setConfetti(
+      Array.from({ length: 44 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        delay: -(Math.random() * 5),
+        duration: 3.2 + Math.random() * 3.8,
+        size: 16 + Math.random() * 24,
+        glyph: CONFETTI_GLYPHS[i % CONFETTI_GLYPHS.length],
+      })),
+    );
   };
 
   // Runtime-derived sizing for the ever-growing Yes button.
@@ -157,10 +111,7 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
   const shakeName = noAttempts % 2 === 1 ? "alert-shake" : "alert-shake-b";
 
   return (
-    <div
-      className="fixed inset-0 select-none overflow-hidden"
-      style={{ fontFamily: FONT_STACK, background: WALLPAPER }}
-    >
+    <div style={{ fontFamily: FONT_STACK }}>
       <style>{`
         @keyframes alert-shake {
           0%, 100% { transform: translateX(0); }
@@ -194,89 +145,8 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
         }
       `}</style>
 
-      {/* Vignette over the wallpaper */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(120% 120% at 50% 40%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.35) 100%)",
-        }}
-      />
-
-      {/* Menu bar */}
-      <MenuBar appName="Finder" account={account}>
-        {MENU_ITEMS.map((item) => (
-          <span key={item} className="hidden sm:inline">
-            {item}
-          </span>
-        ))}
-      </MenuBar>
-
-      {/* Desktop files, for flavor */}
-      <div className="absolute right-5 top-12 z-10 flex flex-col items-center gap-5">
-        <button
-          type="button"
-          onClick={() => setDialogOpen(true)}
-          aria-label="Open Grade Request"
-          className="group flex w-24 flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/10"
-        >
-          <span className="text-[34px] drop-shadow-lg">{"\u{1F170}\uFE0F"}</span>
-          <span className="rounded px-1 text-center text-[11px] leading-tight text-white/95 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] group-hover:bg-[#0a84ff]">
-            Grade Request.app
-          </span>
-          {!dialogOpen && (
-            <span className="text-[10px] leading-tight text-white/70 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
-              click to reopen
-            </span>
-          )}
-        </button>
-        <Link
-          href={account ? "/transcript" : "/login"}
-          aria-label={account ? "Open final_grade.pdf" : "Sign in to open final_grade.pdf"}
-          className="group flex w-24 flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/10"
-        >
-          <span className="relative text-[34px] drop-shadow-lg">
-            {"\u{1F4C4}"}
-            {!account && (
-              <span className="absolute -bottom-1 -right-2 text-[16px]" aria-hidden="true">
-                {"\u{1F512}"}
-              </span>
-            )}
-          </span>
-          <span className="rounded px-1 text-center text-[11px] leading-tight text-white/95 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] group-hover:bg-[#0a84ff]">
-            final_grade.pdf
-          </span>
-          {!account && (
-            <span className="text-[10px] leading-tight text-white/70 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
-              sign in to open
-            </span>
-          )}
-        </Link>
-        <div className="flex w-24 flex-col items-center gap-1">
-          <span className="text-[34px] drop-shadow-lg">{"\u{1F592}"}</span>
-          <span className="rounded px-1 text-center text-[11px] leading-tight text-white/95 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
-            definitely_human.txt
-          </span>
-        </div>
-        <Link
-          href={account ? "/settings/profile" : "/login"}
-          aria-label="Open System Settings"
-          className="group flex w-24 flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/10"
-        >
-          <span
-            className="flex h-12 w-12 items-center justify-center rounded-xl text-[28px] shadow-lg ring-1 ring-white/25"
-            style={{ background: "linear-gradient(180deg, #e3e3e8 0%, #8e8e98 100%)" }}
-          >
-            ⚙️
-          </span>
-          <span className="rounded px-1 text-center text-[11px] leading-tight text-white/95 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] group-hover:bg-[#0a84ff]">
-            Settings
-          </span>
-        </Link>
-      </div>
-
       {/* Attempt-counter toast (macOS notification style) */}
-      {noAttempts > 0 && !accepted && (
+      {visible && noAttempts > 0 && !accepted && (
         <aside
           className="fixed right-3 top-10 z-50 flex w-64 items-center gap-3 rounded-2xl border border-white/25 bg-white/25 p-3 text-white shadow-xl backdrop-blur-2xl"
           style={{ animation: "toast-in 0.3s ease" }}
@@ -296,9 +166,11 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
       )}
 
       {/* Centered alert dialog */}
-      {dialogOpen && (
-      <main className="absolute inset-0 flex items-center justify-center px-4 pb-28 pt-10">
+      {visible && (
+      <main className="pointer-events-none fixed inset-0 flex items-center justify-center px-4 pb-28 pt-10" style={{ zIndex: z }}>
         <div
+          className="pointer-events-auto"
+          onPointerDownCapture={() => focusWindow("grade")}
           style={{
             animation:
               noAttempts > 0 ? `${shakeName} 0.45s ease` : undefined,
@@ -322,7 +194,7 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setDialogOpen(false)}
+                  onClick={close}
                   aria-label="Close"
                   title="Close"
                   className="group/close flex h-3 w-3 items-center justify-center rounded-full border border-black/10 bg-[#ff5f57] hover:brightness-95"
@@ -390,58 +262,8 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
       </main>
       )}
 
-      {/* Dock */}
-      <nav className="absolute bottom-2 left-1/2 z-40 flex -translate-x-1/2 items-end gap-3 rounded-2xl border border-white/25 bg-white/15 px-3 pb-2 pt-2 shadow-2xl backdrop-blur-2xl">
-        {DOCK_APPS.map((app) => (
-          <div key={app.label} className="group relative flex flex-col items-center">
-            <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/60 px-2 py-0.5 text-[11px] text-white opacity-0 backdrop-blur transition-opacity duration-150 group-hover:opacity-100">
-              {app.label}
-            </span>
-            {app.href ? (
-              <Link
-                href={app.href}
-                aria-label={`Open ${app.label}`}
-                className="flex h-12 w-12 origin-bottom cursor-pointer items-center justify-center rounded-xl text-[26px] shadow-lg ring-1 ring-white/25 transition-all duration-200 group-hover:-translate-y-2 group-hover:scale-125"
-                style={{ background: app.bg }}
-              >
-                {app.glyph}
-              </Link>
-            ) : (
-              <button
-                type="button"
-                aria-label={app.label}
-                className="flex h-12 w-12 origin-bottom cursor-default items-center justify-center rounded-xl text-[26px] shadow-lg ring-1 ring-white/25 transition-all duration-200 group-hover:-translate-y-2 group-hover:scale-125"
-                style={{ background: app.bg }}
-              >
-                {app.glyph}
-              </button>
-            )}
-            <span
-              className={`mt-1 h-1 w-1 rounded-full bg-white/80 ${
-                app.running ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          </div>
-        ))}
-        <div className="mx-1 w-px self-stretch bg-white/25" />
-        <div className="group relative flex flex-col items-center">
-          <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/60 px-2 py-0.5 text-[11px] text-white opacity-0 backdrop-blur transition-opacity duration-150 group-hover:opacity-100">
-            {TRASH_APP.label}
-          </span>
-          <button
-            type="button"
-            aria-label={TRASH_APP.label}
-            className="flex h-12 w-12 origin-bottom cursor-default items-center justify-center rounded-xl text-[26px] shadow-lg ring-1 ring-white/25 transition-all duration-200 group-hover:-translate-y-2 group-hover:scale-125"
-            style={{ background: TRASH_APP.bg }}
-          >
-            {TRASH_APP.glyph}
-          </button>
-          <span className="mt-1 h-1 w-1 rounded-full opacity-0" />
-        </div>
-      </nav>
-
       {/* Full-screen YES takeover after 20 refusals */}
-      {yesTakeover && (
+      {visible && yesTakeover && (
         <button
           type="button"
           onClick={handleYes}
@@ -469,7 +291,7 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
       )}
 
       {/* Success state */}
-      {accepted && (
+      {visible && accepted && celebrating && (
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center px-4"
           style={{
@@ -526,6 +348,16 @@ export default function Desktop({ account }: { account: MenuAccount | null }) {
               <p className="mt-4 border-t border-gray-200 pt-3 text-[11px] italic text-gray-400">
                 certified: not an ai (i think)
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setCelebrating(false);
+                  close();
+                }}
+                className="mt-4 rounded-lg bg-[#007aff] px-5 py-1.5 text-[13px] font-medium text-white shadow-sm hover:brightness-110"
+              >
+                Back to Desktop
+              </button>
             </div>
           </div>
         </div>
