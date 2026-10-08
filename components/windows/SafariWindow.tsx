@@ -7,7 +7,9 @@ import Cooked from "@/components/safari/Cooked";
 import SiteVote from "@/components/safari/SiteVote";
 import { Centered, timeAgo } from "@/components/safari/util";
 import WebsiteMaker from "@/components/safari/WebsiteMaker";
+import { getSitePrompt } from "@/app/actions/prompts";
 import { deleteSite, getSite } from "@/app/actions/sites";
+import PromptPanel from "@/components/safari/PromptPanel";
 import { useOS } from "@/lib/os/store";
 import { addressFromInput, builtInSite, MAX_PROMPT, type BuiltInSite, type SiteSummary } from "@/lib/sites";
 
@@ -281,10 +283,8 @@ function SiteView({
             </button>
           ))}
         {showPrompt && (
-          <div className="absolute left-3 right-3 top-full z-10 mt-1 rounded-lg border border-black/10 bg-white p-3 text-[12px] shadow-xl">
-            <p className="font-semibold text-gray-900">What {site.author_name ?? "they"} asked for</p>
-            <p className="mt-1 whitespace-pre-wrap text-gray-700">“{site.prompt}”</p>
-            {site.description && <p className="mt-2 text-gray-500">{site.description}</p>}
+          <div className="absolute left-3 right-3 top-full z-10 mt-1 max-h-[60vh] overflow-y-auto rounded-lg border border-black/10 bg-white p-3 shadow-xl">
+            <PromptPanel load={() => getSitePrompt(site.id)} who={site.author_name ?? "They"} />
           </div>
         )}
       </div>

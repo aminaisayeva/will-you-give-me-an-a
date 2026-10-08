@@ -18,6 +18,16 @@ Also return:
 - "title": the site's name (max 80 characters).
 - "description": one sentence describing the site (max 200 characters).`;
 
+// The user message sent with each request. Kept here so the app can show
+// people exactly what was sent (the "Prompt" buttons).
+export function siteUserMessage(input: string, address: string | null) {
+  return address ? `Build the website that lives at ${address}.` : `Build this website: ${input}`;
+}
+
+export function captionUserMessage(context: string | null) {
+  return context ? `Uploader's context: "${context}"` : "No context from the uploader.";
+}
+
 export function geminiModel() {
   // Google's recommended alias; it always points at the current Flash model.
   return process.env.GEMINI_MODEL || "gemini-flash-latest";
@@ -211,7 +221,7 @@ export async function captionPhoto(
     systemPrompt: CAPTION_SYSTEM_PROMPT,
     parts: [
       { inlineData: { mimeType: image.mimeType, data: image.base64 } },
-      { text: context ? `Uploader's context: "${context}"` : "No context from the uploader." },
+      { text: captionUserMessage(context) },
     ],
     maxOutputTokens: 2000,
     timeoutMs: 60_000,

@@ -1,9 +1,11 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Flame, ImagePlus, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Flame, ImagePlus, ScrollText, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useAccount } from "@/components/os/AccountContext";
+import PromptPanel from "@/components/safari/PromptPanel";
 import { Centered, timeAgo } from "@/components/safari/util";
+import { getPhotoPrompt } from "@/app/actions/prompts";
 import {
   cookOfTheDay,
   deletePhoto,
@@ -352,6 +354,7 @@ function PostCard({
   onDeleted: () => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
   const mine = userId === post.author_id;
   const best = post.captions.reduce<Caption | null>((top, c) => (c.score > 0 && (!top || c.score > top.score) ? c : top), null);
 
@@ -370,6 +373,14 @@ function PostCard({
             </p>
             {post.prompt && <p className="mt-0.5 text-[13px] italic text-gray-700">“{post.prompt}”</p>}
           </div>
+          <button
+            type="button"
+            onClick={() => setShowPrompt((v) => !v)}
+            aria-expanded={showPrompt}
+            className="flex shrink-0 items-center gap-1 rounded-md border border-black/10 px-2 py-0.5 text-[12px] text-gray-700 hover:bg-gray-50"
+          >
+            <ScrollText className="h-3.5 w-3.5" /> {showPrompt ? "Hide Prompt" : "Prompt"}
+          </button>
           {mine &&
             (confirmDelete ? (
               <span className="flex shrink-0 items-center gap-1">
@@ -393,6 +404,12 @@ function PostCard({
               </button>
             ))}
         </div>
+
+        {showPrompt && (
+          <div className="mt-3 rounded-xl border border-black/10 bg-white p-3">
+            <PromptPanel load={() => getPhotoPrompt(post.id)} who={post.author_name ?? "The uploader"} />
+          </div>
+        )}
 
         <ul className="mt-3 flex flex-col gap-2">
           {post.captions.map((caption) => (

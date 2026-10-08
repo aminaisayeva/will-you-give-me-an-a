@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { GeminiError, generateSite, SITE_SYSTEM_PROMPT } from "@/lib/gemini";
+import { GeminiError, generateSite, SITE_SYSTEM_PROMPT, siteUserMessage } from "@/lib/gemini";
 import { addressFromInput, builtInSite, DAILY_SITE_LIMIT, MAX_PROMPT, toSlug } from "@/lib/sites";
 import { createClient } from "@/lib/supabase/server";
 
@@ -43,9 +43,7 @@ export async function POST(request: NextRequest) {
     return json({ error: `You've built ${DAILY_SITE_LIMIT} sites today. Come back tomorrow!` }, 429);
   }
 
-  const userPrompt = address
-    ? `Build the website that lives at ${address}.`
-    : `Build this website: ${input}`;
+  const userPrompt = siteUserMessage(input, address);
 
   let site;
   try {
