@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { GeminiError, generateSite, SITE_SYSTEM_PROMPT } from "@/lib/gemini";
-import { addressFromInput, DAILY_SITE_LIMIT, MAX_PROMPT, toSlug } from "@/lib/sites";
+import { addressFromInput, builtInSite, DAILY_SITE_LIMIT, MAX_PROMPT, toSlug } from "@/lib/sites";
 import { createClient } from "@/lib/supabase/server";
 
 // Building a page with the model can take a while (and may fall back to a
@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
   if (input.length > MAX_PROMPT) return json({ error: `Keep it under ${MAX_PROMPT} characters.` }, 400);
 
   // The shared internet: an address someone already built just opens.
-  const address = addressFromInput(input);
+  const typed = addressFromInput(input);
+  if (builtInSite(typed)) return json({ error: `${typed} already exists. Try a different address.` }, 400);
+  const address = typed;
   if (address) {
     const { data: existing } = await supabase.from("sites").select("slug").eq("slug", address).maybeSingle();
     if (existing) return json({ slug: existing.slug, created: false });
@@ -57,6 +59,7 @@ export async function POST(request: NextRequest) {
   // Find a free address: keep the one the user typed, otherwise the model's
   // suggestion, adding -2, -3... when it's taken.
   let slug = address ?? toSlug(site.address);
+  if (builtInSite(slug)) slug = slug.replace(".", "-fan.");
   for (let attempt = 0; attempt < 6; attempt++) {
     const { error } = await supabase.from("sites").insert({
       slug,

@@ -18,6 +18,14 @@ export const SITE_SUMMARY_COLUMNS =
   "id, slug, title, description, prompt, author_id, author_name, upvotes, downvotes, score, created_at";
 
 export const MAX_PROMPT = 500;
+
+// Pages built into Safari. Generated sites can't take these addresses.
+export const BUILT_IN_SITES = ["cooked.ai", "websitemaker.com"] as const;
+export type BuiltInSite = (typeof BUILT_IN_SITES)[number];
+
+export function builtInSite(address: string | null): BuiltInSite | null {
+  return (BUILT_IN_SITES as readonly string[]).includes(address ?? "") ? (address as BuiltInSite) : null;
+}
 export const DAILY_SITE_LIMIT = 20;
 
 const SLUG_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;

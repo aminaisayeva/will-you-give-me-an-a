@@ -1,6 +1,8 @@
 "use client";
 
+import { KeyRound, Users } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import AppIcon from "@/components/os/AppIcon";
 import Avatar from "@/components/Avatar";
 import { useAccount } from "@/components/os/AccountContext";
 import SignInPrompt from "@/components/os/SignInPrompt";
@@ -11,9 +13,9 @@ import { useOS } from "@/lib/os/store";
 
 type Pane = "profile" | "account" | "password";
 
-const PANES: { id: Exclude<Pane, "profile">; label: string; glyph: string; bg: string }[] = [
-  { id: "account", label: "Users & Groups", glyph: "\u{1F465}", bg: "linear-gradient(180deg, #5ac8fa, #007aff)" },
-  { id: "password", label: "Login Password", glyph: "\u{1F511}", bg: "linear-gradient(180deg, #ff6b6b, #e5383b)" },
+const PANES: { id: Exclude<Pane, "profile">; label: string; icon: typeof Users; color: string }[] = [
+  { id: "account", label: "Users & Groups", icon: Users, color: "bg-blue-500" },
+  { id: "password", label: "Login Password", icon: KeyRound, color: "bg-red-500" },
 ];
 
 const TITLES: Record<Pane, string> = { profile: "Profile", account: "Users & Groups", password: "Login Password" };
@@ -62,9 +64,7 @@ export default function SettingsWindow() {
           {showProfile && panes.length > 0 && <span className="my-1.5 h-px bg-black/10" />}
           {panes.map((p) => (
             <SidebarItem key={p.id} active={pane === p.id} onClick={() => go(p.id)}>
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] text-[11px] shadow-sm" style={{ background: p.bg }}>
-                {p.glyph}
-              </span>
+              <AppIcon icon={p.icon} color={p.color} size="sm" className="shadow-sm!" />
               <span className="truncate text-[13px]">{p.label}</span>
             </SidebarItem>
           ))}

@@ -38,9 +38,9 @@ const techStacks: TechStack[] = [
     category: "AI",
     icon: <Sparkles className="w-5 h-5" />,
     items: [
-      "The Google Gemini API generates whole websites inside Safari from a URL or a description",
-      "Every prompt and generated site is saved in Postgres",
-      "Signed-in users can upvote and downvote generated sites",
+      "cooked.ai: Google Gemini looks at your photo and writes captions in four voices",
+      "Photos live in Supabase Storage; prompts, models and captions are saved in Postgres",
+      "Signed-in users upvote and downvote captions; triggers keep the scores",
     ],
   },
   {
@@ -54,7 +54,7 @@ const highlights = [
   "Pixel-perfect macOS desktop recreation",
   "Draggable, resizable, zoomable windows",
   "Terminal with a virtual filesystem",
-  "AI-generated websites in Safari",
+  "AI photo captions on cooked.ai",
   "Real accounts with Google sign-in",
   "Row Level Security on all data",
 ];
@@ -91,9 +91,9 @@ export default function AboutOSWindow() {
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                   AminaOS (Grade Request Edition) is a class project for a Generative AI course at Columbia
                   University. It recreates the macOS desktop in the browser, complete with a dock, windows,
-                  a terminal and real user accounts, and adds a Safari that uses Google Gemini to build any
-                  website you can name or describe. Every generated site is saved so others can browse and
-                  vote on it.
+                  a terminal and real user accounts. Its Safari opens cooked.ai, where Google Gemini roasts
+                  the photos you upload and everyone votes on which caption cooked hardest. (Rumor has it
+                  Safari can reach a few other sites, too.)
                 </p>
               </div>
             </div>

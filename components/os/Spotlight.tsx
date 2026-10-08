@@ -1,13 +1,14 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { FileText, Flame, Globe, Search, type LucideIcon } from "lucide-react";
+import AppIcon from "@/components/os/AppIcon";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { APPS } from "@/components/os/apps";
 import { documentFiles } from "@/data/aminaos/documentFiles";
 import { addressFromInput } from "@/lib/sites";
 import { useOS, WINDOW_IDS, type WindowId } from "@/lib/os/store";
 
-type Result = { key: string; label: string; detail: string; glyph: string; run: () => void };
+type Result = { key: string; label: string; detail: string; icon: LucideIcon; color: string; run: () => void };
 
 // ⌘K / Ctrl+K: search apps and files, or send the query to Safari.
 export default function Spotlight() {
@@ -40,25 +41,23 @@ function SpotlightPanel({ onClose }: { onClose: () => void }) {
     const q = query.trim().toLowerCase();
     const openApp = (id: WindowId, params?: Record<string, string>) => () => useOS.getState().openWindow(id, params);
     const apps: Result[] = WINDOW_IDS.filter((id) => id !== "text-viewer")
-      .map((id) => ({ key: id, label: APPS[id].title, detail: "Application", glyph: APPS[id].glyph, run: openApp(id) }))
+      .map((id) => ({ key: id, label: APPS[id].title, detail: "Application", icon: APPS[id].icon, color: APPS[id].color, run: openApp(id) }))
       .filter((r) => !q || r.label.toLowerCase().includes(q));
     const files: Result[] = q
       ? documentFiles
           .filter((f) => f.name.toLowerCase().includes(q))
-          .map((f) => ({ key: f.name, label: f.name, detail: "Document", glyph: "\u{1F4DD}", run: openApp("text-viewer", { file: f.name }) }))
+          .map((f) => ({ key: f.name, label: f.name, detail: "Document", icon: FileText, color: "bg-gray-400", run: openApp("text-viewer", { file: f.name }) }))
       : [];
-    const web: Result[] = q
-      ? [
-          {
-            key: "safari",
-            label: addressFromInput(q) ? `Open ${addressFromInput(q)}` : `Build a website: “${query.trim()}”`,
-            detail: "Safari",
-            glyph: "\u{1F310}",
-            run: openApp("safari", { url: query.trim() }),
-          },
-        ]
-      : [];
-    return [...apps.slice(0, 8), ...files.slice(0, 5), ...web];
+    const address = addressFromInput(q);
+    const sites: Result[] = [
+      ...("cooked.ai".includes(q) || "photos captions roast".includes(q)
+        ? [{ key: "cooked.ai", label: "cooked.ai", detail: "Website", icon: Flame, color: "bg-gradient-to-br from-orange-400 to-red-600", run: openApp("safari", { url: "cooked.ai" }) }]
+        : []),
+      ...(address && address !== "cooked.ai"
+        ? [{ key: "web", label: `Open ${address}`, detail: "Safari", icon: Globe, color: "bg-orange-500", run: openApp("safari", { url: address }) }]
+        : []),
+    ];
+    return [...(q ? sites : []), ...apps.slice(0, 8), ...files.slice(0, 5)];
   }, [query]);
 
   const choose = (r: Result | undefined) => {
@@ -111,7 +110,7 @@ function SpotlightPanel({ onClose }: { onClose: () => void }) {
                   onClick={() => choose(r)}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-1.5 text-left ${i === active ? "bg-[#007aff] text-white" : "text-gray-900"}`}
                 >
-                  <span className="text-[20px]">{r.glyph}</span>
+                  <AppIcon icon={r.icon} color={r.color} size="sm" className="h-6! w-6! rounded-md!" />
                   <span className="min-w-0 flex-1 truncate text-[14px]">{r.label}</span>
                   <span className={`text-[11px] ${i === active ? "text-white/80" : "text-gray-400"}`}>{r.detail}</span>
                 </button>

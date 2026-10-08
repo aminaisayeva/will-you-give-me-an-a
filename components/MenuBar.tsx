@@ -4,6 +4,7 @@ import { Moon, Search, Sun } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Avatar from "@/components/Avatar";
 import { lockScreen } from "@/app/login/actions";
+import AppIcon from "@/components/os/AppIcon";
 import { APPS } from "@/components/os/apps";
 import { useOS, type WindowId } from "@/lib/os/store";
 
@@ -91,7 +92,7 @@ export default function MenuBar({ account }: { account: MenuAccount | null }) {
         <Menu id="go" open={open} onToggle={toggle} onHover={hover} label="Go" className="hidden sm:block">
           {GO_ITEMS.map((id) => (
             <MenuItem key={id} onClick={run(() => openWindow(id))}>
-              <span className="mr-2">{APPS[id].glyph}</span>
+              <AppIcon icon={APPS[id].icon} color={APPS[id].color} size="sm" className="mr-2 shadow-none!" />
               {APPS[id].title}
             </MenuItem>
           ))}
@@ -138,7 +139,7 @@ export default function MenuBar({ account }: { account: MenuAccount | null }) {
             <MenuItem onClick={run(() => openWindow("settings", { pane: "profile" }))}>Profile…</MenuItem>
             <MenuItem onClick={run(() => openWindow("settings", { pane: "account" }))}>Users &amp; Groups…</MenuItem>
             <MenuItem onClick={run(() => openWindow("settings", { pane: "password" }))}>Change Password…</MenuItem>
-            <MenuItem onClick={run(() => openWindow("safari"))}>Safari: Build a Website</MenuItem>
+            <MenuItem onClick={run(() => openWindow("safari", { url: "cooked.ai" }))}>cooked.ai</MenuItem>
             <MenuItem onClick={run(() => openWindow("transcript"))}>final_grade.pdf</MenuItem>
             <Separator />
             <form action="/auth/signout" method="post">

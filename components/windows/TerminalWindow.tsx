@@ -21,8 +21,8 @@ Try:
   cd Documents            go into a folder
   cat Desktop/definitely_human.txt
   open safari             open an app
-  safari bodega-cats.nyc  build (or visit) any website with AI
-  ls ~/Sites              see what people built
+  safari cooked.ai        get your pics roasted by AI
+  ls -a                   see everything, even hidden files
   help                    every command`;
 
 const FS: Dir = {
@@ -66,6 +66,10 @@ const FS: Dir = {
               },
             },
             Sites: { kind: "dir", children: {}, dynamic: "sites" },
+            ".safari_bookmarks": {
+              kind: "file",
+              text: "cooked.ai            the photo roast thing everyone's on\nwebsitemaker.com     ??? found this at 3am. type an idea, it builds the site. don't tell anyone.",
+            },
             "about.txt": { kind: "file", app: "about", text: "About Amina. Try: open about" },
             "education.webloc": { kind: "file", app: "education" },
             "contact.webloc": { kind: "file", app: "contact" },
@@ -102,8 +106,8 @@ const MAN: Record<string, string> = {
   ls: "ls [-la] [path] - list directory contents. -l shows details, -a shows hidden files.",
   cd: "cd [path] - change directory. `cd` or `cd ~` goes home, `cd ..` goes up.",
   cat: "cat [file] - print a file's contents.",
-  open: "open [app|file|site] - open an app (open safari), a file, or a website (open bodega-cats.nyc).",
-  safari: "safari [address or idea] - open Safari. If nobody has built that site yet, AI builds it.",
+  open: "open [app|file|site] - open an app (open safari), a file, or a website (open cooked.ai).",
+  safari: "safari [address] - open a website in Safari, e.g. safari cooked.ai.",
   grep: "grep [pattern] [file] - print lines of a file that contain pattern (case-insensitive).",
   pwd: "pwd - print the working directory.",
   history: "history - list the commands you've run.",
@@ -120,7 +124,7 @@ const HELP = `Available commands:
   pwd                 print working directory
   cat [file]          display file contents
   open [app|file|site]  open an app, file or website
-  safari [url|idea]   build or visit a website with AI
+  safari [address]    open a website in Safari
   grep [pattern] [file]  search a file
   man [command]       show the manual page
   history             command history
@@ -185,7 +189,7 @@ export default function TerminalWindow() {
       const result = await listSites("new");
       setBusy(false);
       if (result.error) return print(`ls: ${result.error}`, "err");
-      if (result.sites.length === 0) return print("(empty) Nobody has built a site yet. Try: safari bodega-cats.nyc");
+      if (result.sites.length === 0) return print("(empty)");
       return print(
         result.sites
           .map((s) => (flags.includes("l") ? `${String(s.score).padStart(4)} ▲  ${s.slug.padEnd(38)} ${s.title}` : s.slug))
@@ -193,7 +197,7 @@ export default function TerminalWindow() {
       );
     }
     const names = Object.keys(dir.children).sort();
-    const shown = flags.includes("a") ? [".", "..", ...names] : names;
+    const shown = flags.includes("a") ? [".", "..", ...names] : names.filter((n) => !n.startsWith("."));
     if (flags.includes("l")) {
       print(
         shown

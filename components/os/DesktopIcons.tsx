@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useAccount } from "@/components/os/AccountContext";
+import AppIcon from "@/components/os/AppIcon";
 import { DESKTOP_ICONS, type DesktopIcon } from "@/components/os/apps";
 import { useOS } from "@/lib/os/store";
 import { useMounted } from "@/lib/os/use-mounted";
@@ -81,10 +82,10 @@ export default function DesktopIcons() {
             className="group absolute flex w-[88px] touch-none select-none flex-col items-center gap-1 rounded-lg p-1 hover:bg-white/10 focus-visible:bg-white/15 focus-visible:outline-none"
             style={{ left: p.x, top: p.y }}
           >
-            <span className="relative text-[34px] leading-none drop-shadow-lg">
-              {icon.glyph}
+            <span className="relative transition-transform group-hover:scale-105 group-active:scale-95">
+              <AppIcon icon={icon.icon} color={icon.color} size="lg" />
               {locked && (
-                <span className="absolute -bottom-1 -right-2 text-[16px]" aria-hidden="true">
+                <span className="absolute -bottom-1 -right-1.5 text-[15px]" aria-hidden="true">
                   {"\u{1F512}"}
                 </span>
               )}

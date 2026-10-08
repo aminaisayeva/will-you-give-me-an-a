@@ -9,7 +9,7 @@ const terminalCommands = [
   { command: "pwd", description: "Print working directory" },
   { command: "cat [file]", description: "Display file contents" },
   { command: "open [app|file|site]", description: "Open an application, a file, or a website in Safari" },
-  { command: "safari [url or idea]", description: "Have Safari build a website from a URL or a description" },
+  { command: "safari [address]", description: "Open a website in Safari, e.g. safari cooked.ai" },
   { command: "grep [pattern] [file]", description: "Search for a pattern in a file" },
   { command: "man [command]", description: "Show the manual page for a command" },
   { command: "clear", description: "Clear the terminal screen" },
@@ -20,15 +20,15 @@ const terminalCommands = [
 
 const safariTips = [
   <>
-    Type a made-up address like <code className="font-mono text-blue-700 dark:text-blue-300">bodega-cats.nyc</code>{" "}
-    into the address bar, or simply describe the site you want.
+    Open <code className="font-mono text-blue-700 dark:text-blue-300">cooked.ai</code> in Safari (it’s in Favorites, on the
+    desktop, and the first thing you see after logging in).
   </>,
-  <>Google Gemini builds the whole website for you in a few seconds.</>,
-  <>Signed-in users can upvote or downvote any generated site.</>,
+  <>Upload a pic and Google Gemini roasts it four ways: Chronically Online, Midwest Mom, Real New Yorker and Columbia Tour Guide.</>,
+  <>Signed-in users vote on every caption. The best one gets the COOKED badge, and the top caption of the day gets the banner.</>,
   <>
-    Browse what others have made with the <strong>Trending</strong>, <strong>New</strong> and{" "}
-    <strong>My Sites</strong> tabs.
+    Browse with the <strong>Hot</strong>, <strong>New</strong>, <strong>Top</strong> and <strong>My Pics</strong> tabs.
   </>,
+  <>Safari knows a few other addresses too. Curious people tend to find them.</>,
 ];
 
 const navigationTips = [
@@ -49,7 +49,7 @@ export default function HelpWindow() {
           <BookOpen className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">AminaOS Help</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            A macOS-inspired desktop with a working terminal and an AI-powered Safari
+            A macOS-inspired desktop with a working terminal and AI-powered cooked.ai in Safari
           </p>
         </div>
       </section>
@@ -81,7 +81,7 @@ export default function HelpWindow() {
       <section>
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
           <Compass className="w-5 h-5" />
-          Safari: build any website
+          cooked.ai: get your pics roasted
         </h2>
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-4">
           <div className="space-y-2">
@@ -113,7 +113,7 @@ export default function HelpWindow() {
 
       {/* Footer */}
       <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-gray-500 dark:text-gray-400 text-sm">Explore, build a website, and have fun!</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Explore, get cooked, and have fun!</p>
       </div>
     </div>
   );

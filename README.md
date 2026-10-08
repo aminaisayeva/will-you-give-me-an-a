@@ -11,17 +11,20 @@ A Next.js app styled as a macOS desktop, with a system popup that asks the only 
 
 ## AminaOS desktop
 
-Everything opens as a draggable, resizable window on one desktop, ported from my AminaOS project: Safari, Mail, Terminal, Calendar, Photos, Files + Text Viewer, About Me, Education, Contact, Help, Sudoku, Trash, System Settings and final_grade.pdf. Menu bar ( menu, Go, Help), Dock, draggable desktop icons, Spotlight (⌘K) and dark mode included. URLs deep-link into windows: `/mail`, `/terminal`, `/settings/password`, `/transcript`, `/safari/<address>`.
+Everything opens as a draggable, resizable window on one desktop (with AminaOS's lucide-on-colour icons), ported from my AminaOS project: Safari, Mail, Terminal, Calendar, Photos, Files + Text Viewer, About Me, Education, Contact, Help, Sudoku, Trash, System Settings and final_grade.pdf. Menu bar ( menu, Go, Help), Dock, draggable desktop icons, Spotlight (⌘K) and dark mode included. URLs deep-link into windows: `/mail`, `/terminal`, `/settings/password`, `/transcript`, `/safari/<address>`.
 
-## Safari: AI-built websites (assignment 4)
+## cooked.ai: AI photo captions (assignment 4)
 
-Type a web address that doesn't exist (`bodega-cats.nyc`) or describe a site, and **Gemini** builds it as a single-file web page. The generated "internet" is shared: an address someone already built just opens.
+After logging in, the desktop opens **Safari at cooked.ai**. Upload a photo (resized in the browser to keep it cheap) and **Gemini** roasts it in four voices written for our persona, Sam: *Chronically Online*, *Midwest Mom*, *Real New Yorker* and *Columbia Tour Guide*. Everyone votes on the captions.
 
-- **Generate** (`POST /api/sites`, signed-in only, 20 per user per day). The page, the user's prompt, the exact system prompt and the model name are saved in `sites`.
-- **Rate**: signed-in users upvote/downvote other people's sites. Each vote is a row in `site_votes`; a trigger keeps `sites.upvotes/downvotes/score` in sync. Start page tabs: Trending (this week), New, All-Time, My Sites. Shareable links: `/safari/<address>`.
-- **Sandboxed**: generated HTML is served from `/s/<address>` with a CSP `sandbox allow-scripts` header (opaque origin: no cookies, no storage, no network) and shown in a sandboxed iframe.
-- **Strict RLS on every table** (`supabase/sites.sql`): anyone can read sites; only signed-in users create sites (as themselves, with trigger-maintained counts and author name they can't write); votes are private to the voter and you can't vote on your own site; mail is signed-in only (shared inbox + your own sent mail); profiles allow editing only your name and photo.
-- Terminal: `safari <idea>` builds a site, `ls -l ~/Sites` lists them, `open <address>` visits one.
+- **Generate** (`POST /api/cooked`, signed-in only, 15 photos per user per day). The photo goes to the `photos` Storage bucket (never into Postgres); the `photos` row stores its path, the uploader's optional context, the exact system prompt and the model; the captions go in `captions`.
+- **Rate**: signed-in users upvote/downvote other people's captions. Each vote is a row in `caption_votes`; triggers keep caption and photo scores in sync. You can't vote on your own pic.
+- **Feed**: Hot (score decays with age), New, Top, My Pics, plus a **Cook of the Day** banner for the best caption of the last 24 hours. The best caption on each pic gets the COOKED badge.
+- **Strict RLS** (`supabase/cooked.sql`): anyone can browse; only signed-in users post (into their own Storage folder) and vote; votes are private; nobody can edit captions or scores.
+
+## websitemaker.com (hidden easter egg)
+
+Safari is a plain browser: typing an address only visits it. The unlisted site **websitemaker.com** has its own build bar: describe any website and Gemini builds it as a single-file page at its own address (`sites`, `site_votes`, `supabase/sites.sql`). Generated pages are served from `/s/<address>` with a CSP `sandbox` header (opaque origin, no network). Hint: `ls -a` in Terminal.
 
 Set `GEMINI_API_KEY` (from aistudio.google.com) and optionally `GEMINI_MODEL` (default `gemini-flash-latest`, falling back to `gemini-3.5-flash` and `gemini-flash-lite-latest` when busy) in `.env.local` and in Vercel.
 

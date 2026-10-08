@@ -1,5 +1,6 @@
 "use client";
 
+import AppIcon from "@/components/os/AppIcon";
 import { APPS, DOCK } from "@/components/os/apps";
 import { useOS, WINDOW_IDS, type WindowId } from "@/lib/os/store";
 
@@ -14,10 +15,9 @@ function DockTile({ id, running, onClick }: { id: WindowId; running: boolean; on
         type="button"
         onClick={onClick}
         aria-label={`Open ${app.title}`}
-        className="flex h-11 w-11 origin-bottom items-center justify-center rounded-xl text-[24px] shadow-lg ring-1 ring-white/25 transition-all duration-200 group-hover:-translate-y-2 group-hover:scale-125 sm:h-12 sm:w-12 sm:text-[26px]"
-        style={{ background: app.tile }}
+        className="origin-bottom rounded-xl transition-all duration-200 group-hover:-translate-y-2 group-hover:scale-125"
       >
-        {app.glyph}
+        <AppIcon icon={app.icon} color={app.color} />
       </button>
       <span className={`mt-1 h-1 w-1 rounded-full bg-white/80 ${running ? "opacity-100" : "opacity-0"}`} />
     </div>
@@ -32,7 +32,7 @@ export default function Dock() {
 
   return (
     <nav
-      className="fixed bottom-2 left-1/2 flex max-w-[calc(100vw-16px)] -translate-x-1/2 items-end gap-2 overflow-x-auto rounded-2xl border border-white/25 bg-white/15 px-2.5 pb-1.5 pt-2 shadow-2xl backdrop-blur-2xl sm:gap-3 sm:overflow-visible"
+      className="fixed bottom-2 left-1/2 flex max-w-[calc(100vw-16px)] -translate-x-1/2 items-end gap-1.5 overflow-x-auto rounded-2xl border border-white/20 bg-white/20 px-2 pb-1.5 pt-2 shadow-2xl backdrop-blur-2xl dark:bg-black/30 sm:gap-3 sm:overflow-visible sm:px-4"
       style={{ zIndex: 5000 }}
     >
       {DOCK.map((id) => (
