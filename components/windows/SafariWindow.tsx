@@ -256,7 +256,7 @@ function Building({ input }: { input: string }) {
         <p className="text-[16px] font-semibold">Building {input.length > 60 ? `${input.slice(0, 60)}…` : input}</p>
         <p className="mt-1 h-5 text-[13px] text-gray-500 transition-opacity">{BUILD_STEPS[stepIndex]}</p>
       </div>
-      <p className="text-[11px] text-gray-400">Gemini usually takes 10–40 seconds.</p>
+      <p className="text-[11px] text-gray-400">Gemini usually takes 20–60 seconds. Busy times can take longer.</p>
     </div>
   );
 }

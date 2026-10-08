@@ -1,10 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { GeminiError, generateSite, geminiModel, SITE_SYSTEM_PROMPT } from "@/lib/gemini";
+import { GeminiError, generateSite, SITE_SYSTEM_PROMPT } from "@/lib/gemini";
 import { addressFromInput, DAILY_SITE_LIMIT, MAX_PROMPT, toSlug } from "@/lib/sites";
 import { createClient } from "@/lib/supabase/server";
 
-// Building a page with the model can take a while.
-export const maxDuration = 120;
+// Building a page with the model can take a while (and may fall back to a
+// second model when the first is overloaded).
+export const maxDuration = 300;
 
 const json = (body: Record<string, unknown>, status = 200) => NextResponse.json(body, { status });
 
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
       description: site.description || null,
       prompt: input,
       system_prompt: SITE_SYSTEM_PROMPT,
-      model: geminiModel(),
+      model: site.model,
       html: site.html,
     });
     if (!error) return json({ slug, created: true });

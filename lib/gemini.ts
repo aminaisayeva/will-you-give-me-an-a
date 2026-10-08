@@ -10,7 +10,7 @@ Hard requirements for "html":
 - Images: prefer inline SVG, CSS art, gradients and emoji. If you use a photo, only use https://picsum.photos/seed/<word>/<w>/<h>.
 - Links must be in-page anchors (href="#section") or "#". Never link to other websites.
 - Responsive: looks good from 360px to 1400px wide.
-- Keep it under about 60 KB.
+- Keep it focused: about 12-20 KB of HTML. A few strong sections beat many thin ones.
 - Nothing hateful, sexual, or harassing; no real private individuals. If the request asks for that, build a light-hearted, harmless take on the topic instead.
 
 Also return:
@@ -19,18 +19,59 @@ Also return:
 - "description": one sentence describing the site (max 200 characters).`;
 
 export function geminiModel() {
-  return process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  // Google's recommended alias; it always points at the current Flash model.
+  return process.env.GEMINI_MODEL || "gemini-flash-latest";
 }
 
-export type GeneratedSite = { address: string; title: string; description: string; html: string };
+// Tried in order when the preferred model is overloaded (503) or unavailable.
+const FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-flash-lite-latest"];
+
+// The least "thinking" each model accepts, so pages come back faster.
+function thinkingConfig(model: string) {
+  if (model.startsWith("gemini-2.5")) return { thinkingBudget: 0 };
+  if (model === "gemini-flash-latest" || model.startsWith("gemini-3.8")) return { thinkingLevel: "low" };
+  return { thinkingLevel: "minimal" };
+}
+
+export type GeneratedSite = { address: string; title: string; description: string; html: string; model: string };
 
 export class GeminiError extends Error {}
+
+// Models sometimes over-escape apostrophes ("We\\'ve") in page text. That's
+// only meaningful inside scripts, so strip it everywhere else.
+function unescapeQuotes(html: string) {
+  return html
+    .split(/(<script[\s\S]*?<\/script>)/i)
+    .map((part, i) => (i % 2 === 1 ? part : part.replace(/\\'/g, "'")))
+    .join("");
+}
+
+// Overloaded (503), rate limited (429) or a server hiccup: worth another try.
+class RetryableError extends GeminiError {}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function generateSite(userPrompt: string): Promise<GeneratedSite> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new GeminiError("The site builder isn't configured yet (missing GEMINI_API_KEY).");
 
-  const model = geminiModel();
+  const models = [...new Set([geminiModel(), ...FALLBACK_MODELS])];
+  let lastError: GeminiError = new GeminiError("The AI is busy right now. Try again in a minute.");
+  for (const model of models) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await generateWith(model, apiKey, userPrompt);
+      } catch (err) {
+        if (!(err instanceof RetryableError)) throw err;
+        lastError = err;
+        if (attempt === 0) await sleep(1500);
+      }
+    }
+  }
+  throw lastError;
+}
+
+async function generateWith(model: string, apiKey: string, userPrompt: string): Promise<GeneratedSite> {
   const generationConfig: Record<string, unknown> = {
     temperature: 1,
     maxOutputTokens: 24000,
@@ -47,8 +88,7 @@ export async function generateSite(userPrompt: string): Promise<GeneratedSite> {
       propertyOrdering: ["address", "title", "description", "html"],
     },
   };
-  // Gemini 2.5 models "think" by default, which only slows this down.
-  if (model.startsWith("gemini-2.5")) generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  generationConfig.thinkingConfig = thinkingConfig(model);
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -61,13 +101,27 @@ export async function generateSite(userPrompt: string): Promise<GeneratedSite> {
         generationConfig,
       }),
       cache: "no-store",
+      // Leave time for a fallback model if this one stalls.
+      signal: AbortSignal.timeout(170_000),
     },
-  );
+  ).catch((err: unknown) => {
+    throw new RetryableError(
+      err instanceof Error && err.name === "TimeoutError" ? "The AI took too long. Try a simpler idea." : "Couldn't reach the AI. Try again.",
+    );
+  });
 
   if (!res.ok) {
     const body = await res.text();
-    if (res.status === 429) throw new GeminiError("The AI is busy right now (rate limit). Try again in a minute.");
-    throw new GeminiError(`The AI request failed (${res.status}). ${body.slice(0, 200)}`);
+    if (res.status === 429 || res.status >= 500 || res.status === 404) {
+      // 404: this model isn't available to the key; move on to the next one.
+      throw new RetryableError(
+        res.status === 429
+          ? "The AI is busy right now (rate limit). Try again in a minute."
+          : "Google's AI is overloaded right now. Try again in a minute.",
+      );
+    }
+    console.error("gemini error", res.status, body.slice(0, 500));
+    throw new GeminiError(`The AI request failed (${res.status}).`);
   }
 
   const data = (await res.json()) as {
@@ -92,7 +146,7 @@ export async function generateSite(userPrompt: string): Promise<GeneratedSite> {
     );
   }
 
-  const html = typeof parsed.html === "string" ? parsed.html.trim() : "";
+  const html = typeof parsed.html === "string" ? unescapeQuotes(parsed.html.trim()) : "";
   if (!/<html[\s>]/i.test(html)) throw new GeminiError("The AI returned something that isn't a website. Try again.");
 
   return {
@@ -100,5 +154,6 @@ export async function generateSite(userPrompt: string): Promise<GeneratedSite> {
     title: String(parsed.title ?? "").trim().slice(0, 120) || "Untitled site",
     description: String(parsed.description ?? "").trim().slice(0, 300),
     html,
+    model,
   };
 }

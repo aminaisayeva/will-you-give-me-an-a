@@ -23,7 +23,7 @@ Type a web address that doesn't exist (`bodega-cats.nyc`) or describe a site, an
 - **Strict RLS on every table** (`supabase/sites.sql`): anyone can read sites; only signed-in users create sites (as themselves, with trigger-maintained counts and author name they can't write); votes are private to the voter and you can't vote on your own site; mail is signed-in only (shared inbox + your own sent mail); profiles allow editing only your name and photo.
 - Terminal: `safari <idea>` builds a site, `ls -l ~/Sites` lists them, `open <address>` visits one.
 
-Set `GEMINI_API_KEY` (from aistudio.google.com) and optionally `GEMINI_MODEL` (default `gemini-2.5-flash`) in `.env.local` and in Vercel.
+Set `GEMINI_API_KEY` (from aistudio.google.com) and optionally `GEMINI_MODEL` (default `gemini-flash-latest`, falling back to `gemini-3.5-flash` and `gemini-flash-lite-latest` when busy) in `.env.local` and in Vercel.
 
 ## Mail app (Supabase)
 
