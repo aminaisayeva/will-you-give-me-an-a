@@ -2,6 +2,7 @@
 
 import {
   Award,
+  SquareTerminal,
   Calendar,
   CircleHelp,
   FileText,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 import type { ComponentType } from "react";
 import AboutOSWindow from "@/components/windows/AboutOSWindow";
+import AcademyWindow from "@/components/windows/AcademyWindow";
 import AboutWindow from "@/components/windows/AboutWindow";
 import CalendarWindow from "@/components/windows/CalendarWindow";
 import ContactWindow from "@/components/windows/ContactWindow";
@@ -48,6 +50,7 @@ export type AppInfo = {
 };
 
 export const APPS: Record<WindowId, AppInfo> = {
+  academy: { title: "Terminal Academy", icon: SquareTerminal, color: "bg-gradient-to-br from-indigo-500 to-violet-600", size: { width: 1180, height: 720 }, component: AcademyWindow },
   grade: { title: "Grade Request", icon: Award, color: "bg-red-500", size: { width: 430, height: 300 }, component: null },
   safari: { title: "Safari", icon: Globe, color: "bg-orange-500", size: { width: 1040, height: 700 }, component: SafariWindow },
   mail: { title: "Mail", icon: Mail, color: "bg-blue-600", size: { width: 1000, height: 640 }, component: MailWindow },
@@ -67,7 +70,7 @@ export const APPS: Record<WindowId, AppInfo> = {
   trash: { title: "Trash", icon: Trash2, color: "bg-gray-500", size: { width: 560, height: 440 }, component: TrashWindow },
 };
 
-export const DOCK: WindowId[] = ["safari", "mail", "terminal", "calendar", "photos", "files", "settings"];
+export const DOCK: WindowId[] = ["academy", "terminal", "safari", "mail", "calendar", "files", "settings"];
 
 export type DesktopIcon = {
   id: string;
@@ -80,14 +83,12 @@ export type DesktopIcon = {
 };
 
 export const DESKTOP_ICONS: DesktopIcon[] = [
-  { id: "cooked", label: "cooked.ai", open: "safari", params: { url: "cooked.ai" }, icon: Flame, color: "bg-gradient-to-br from-orange-400 to-red-600" },
-  { id: "grade", label: "Grade Request.app", open: "grade", icon: Award, color: "bg-red-500" },
+  { id: "academy", label: "Terminal Academy", open: "academy", icon: SquareTerminal, color: "bg-gradient-to-br from-indigo-500 to-violet-600" },
+  { id: "terminal", label: "Terminal", open: "terminal", icon: Terminal, color: "bg-black" },
   { id: "transcript", label: "final_grade.pdf", open: "transcript", icon: FileText, color: "bg-red-500", locked: true },
   { id: "files", label: "Files", open: "files", icon: Folder, color: "bg-blue-400" },
-  { id: "about", label: "About Me", open: "about", icon: User, color: "bg-green-500" },
-  { id: "education", label: "Education", open: "education", icon: GraduationCap, color: "bg-yellow-500" },
-  { id: "contact", label: "Contact", open: "contact", icon: Mail, color: "bg-orange-500" },
-  { id: "terminal", label: "Terminal", open: "terminal", icon: Terminal, color: "bg-black" },
   { id: "settings", label: "Settings", open: "settings", icon: Settings, color: "bg-gray-500" },
+  { id: "cooked", label: "cooked.ai", open: "safari", params: { url: "cooked.ai" }, icon: Flame, color: "bg-gradient-to-br from-orange-400 to-red-600" },
+  { id: "grade", label: "Grade Request.app", open: "grade", icon: Award, color: "bg-red-500" },
   { id: "human", label: "definitely_human.txt", open: "text-viewer", params: { file: "definitely_human.txt" }, icon: FileText, color: "bg-gray-400" },
 ];

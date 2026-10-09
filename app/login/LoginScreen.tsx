@@ -234,6 +234,7 @@ function SignIn({
   return (
     <>
       <Greeting avatar={null} name="stranger" title="Hello, stranger" />
+      <p className="mt-0.5 text-[12px] text-white/75">Sign in to Terminal Academy</p>
       <form action={action} className="mt-4 flex w-full flex-col gap-2">
         <Shake trigger={state.error}>
           <div className="flex flex-col gap-2">
@@ -316,7 +317,7 @@ function CreateAccount({ onCancel }: { onCancel: () => void }) {
   return (
     <>
       <p className="text-[20px] font-semibold [text-shadow:0_1px_6px_rgba(0,0,0,0.3)]">Create Account</p>
-      <p className="mt-0.5 text-[12px] text-white/75">Join the class. Grades not included.</p>
+      <p className="mt-0.5 text-[12px] text-white/75">Free. Unlocks all 7 modules and saves your progress.</p>
       <form action={action} className="mt-4 w-full">
         <Shake trigger={state.error}>
           <div className="flex flex-col gap-2">

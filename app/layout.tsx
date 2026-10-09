@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Will you give me an A?",
-  description: "my name is Amina, i am not an ai (i think)",
+  title: "Terminal Academy · Learn the terminal",
+  description: "A pretend Mac in your browser where you learn the command line, from your first ls to your first script.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

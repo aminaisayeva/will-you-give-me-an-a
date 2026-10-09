@@ -9,7 +9,9 @@ import Spotlight from "@/components/os/Spotlight";
 import WindowManager from "@/components/os/WindowManager";
 import MenuBar from "@/components/MenuBar";
 import { FONT_STACK, WALLPAPER } from "@/lib/desktop-theme";
+import { useProgress } from "@/lib/course/progress";
 import { isWindowId, useOS } from "@/lib/os/store";
+import StickyNotes from "@/components/os/StickyNotes";
 
 export type InitialWindow = { id: string; params?: Record<string, string> };
 
@@ -17,6 +19,12 @@ export type InitialWindow = { id: string; params?: Record<string, string> };
 // with different windows open.
 export default function Desktop({ account, initial }: { account: DesktopAccount | null; initial: InitialWindow[] }) {
   const darkMode = useOS((s) => s.darkMode);
+
+  // Load course progress (and merge a guest's progress after they sign in).
+  const signedIn = Boolean(account);
+  useEffect(() => {
+    void useProgress.getState().init(signedIn);
+  }, [signedIn]);
 
   // Open the windows this URL asked for, once.
   useEffect(() => {
@@ -42,6 +50,7 @@ export default function Desktop({ account, initial }: { account: DesktopAccount 
         />
         <MenuBar account={account} />
         <DesktopIcons />
+        <StickyNotes />
         <WindowManager />
         <GradeRequest />
         <Dock />

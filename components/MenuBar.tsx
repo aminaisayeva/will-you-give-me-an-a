@@ -7,6 +7,7 @@ import { lockScreen } from "@/app/login/actions";
 import AppIcon from "@/components/os/AppIcon";
 import { APPS } from "@/components/os/apps";
 import { useOS, type WindowId } from "@/lib/os/store";
+import { showWelcomeNotes } from "@/components/os/StickyNotes";
 
 export type MenuAccount = { name: string; email: string | null; avatar: string | null };
 
@@ -22,7 +23,7 @@ function formatMacClock(d: Date): string {
   return `${days[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}  ${h12}:${mins} ${ampm}`;
 }
 
-const GO_ITEMS: WindowId[] = ["safari", "mail", "terminal", "files", "calendar", "photos", "about", "education", "contact", "sudoku"];
+const GO_ITEMS: WindowId[] = ["academy", "terminal", "safari", "mail", "files", "calendar", "photos", "sudoku", "about"];
 
 const MENU_PANEL =
   "absolute top-7 z-50 w-60 rounded-lg border border-black/10 bg-white/90 p-1 text-gray-900 shadow-2xl backdrop-blur-2xl";
@@ -98,7 +99,8 @@ export default function MenuBar({ account }: { account: MenuAccount | null }) {
           ))}
         </Menu>
         <Menu id="help" open={open} onToggle={toggle} onHover={hover} label="Help" className="hidden sm:block">
-          <MenuItem onClick={run(() => openWindow("help"))}>AminaOS Help</MenuItem>
+          <MenuItem onClick={run(() => openWindow("help"))}>Terminal Academy Help</MenuItem>
+          <MenuItem onClick={run(showWelcomeNotes)}>Show Welcome Notes</MenuItem>
           <MenuItem onClick={run(() => setSpotlight(true))}>Search… ⌘K</MenuItem>
         </Menu>
       </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { renderDesktop } from "@/lib/desktop";
 
-export const metadata: Metadata = { title: "System Settings · Will you give me an A?" };
+export const metadata: Metadata = { title: "System Settings · Terminal Academy" };
 
 // /settings, /settings/profile, /settings/account, /settings/password
 export default async function SettingsPage({ params }: PageProps<"/settings/[[...pane]]">) {

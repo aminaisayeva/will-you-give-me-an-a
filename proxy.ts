@@ -1,14 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { UNLOCK_COOKIE } from "@/lib/lock";
 
 // Routes that need a signed-in user. Pages re-check the user themselves; this
 // is the fast, optimistic redirect.
 const PROTECTED = ["/transcript", "/settings", "/mail", "/welcome"];
-
-// Pages that are reachable while the screen is still locked.
-// /s/* serves generated sites (shareable links), /api/* answers fetches.
-const LOCK_EXEMPT = ["/login", "/auth", "/s", "/api"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -58,10 +53,6 @@ export async function proxy(request: NextRequest) {
   };
 
   if (!user && PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return redirectTo("/login");
-  }
-  const exempt = LOCK_EXEMPT.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-  if (!exempt && !request.cookies.has(UNLOCK_COOKIE)) {
     return redirectTo("/login");
   }
 

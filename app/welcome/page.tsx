@@ -5,7 +5,7 @@ import { hasFullName } from "@/lib/supabase";
 import SetupAssistant from "./SetupAssistant";
 
 export const metadata: Metadata = {
-  title: "Setup Assistant · Will you give me an A?",
+  title: "Setup Assistant · Terminal Academy",
 };
 
 function suggestedNames(meta: Record<string, unknown>) {

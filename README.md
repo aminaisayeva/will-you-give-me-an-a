@@ -1,13 +1,16 @@
-# Will you give me an A?
+# Terminal Academy
 
-A Next.js app styled as a macOS desktop, with a system popup that asks the only question that matters:
+Learn the command line on a pretend Mac that lives in your browser, from your first `ls` to your first shell script. Nothing you type can break anything.
 
-> my name is Amina, i am not an ai (i think)
->
-> **Will you give me an A?**
+- **Guests land straight on the desktop.** Sticky notes explain the site, point to **Terminal Academy**, and to **Sign In** in the menu bar.
+- **Terminal Academy** (`/academy`): 7 modules: First Steps, Files & Folders, Finding Things, Pipes & Redirection, Permissions, Environment, Your First Script. Each lesson has an explanation, clickable examples, tasks that are **checked automatically** against a sandboxed file system, and progressive hints.
+- **Module 1 is free.** A free account unlocks Modules 2–7. Guests' progress lives in the browser and is merged into their account when they sign in (`course_progress` table, RLS: own rows only).
+- **final_grade.pdf** (`/transcript`, signed-in only) is the course transcript: a grade per module, and a certificate (and an A) when everything's done.
+- **Terminal** app: a free-play playground over the same shell, saved in your browser.
 
-- **Yes** — always works. 🎉
-- **No** — never works. Every attempt makes **Yes** bigger. After 20 attempts, YES takes over the entire screen.
+### The shell
+
+`lib/shell` is a small zsh-like shell written for this site: an in-memory file system with permissions; quotes, `$VARS`, `~`, globs, pipes, `>`/`>>`/`<`/`2>`, `;`/`&&`/`||`, aliases and scripts with `$1…`; and ~45 commands (`ls`, `cd`, `cat`, `mkdir`, `cp`, `mv`, `rm`, `grep`, `find`, `wc`, `sort`, `uniq`, `chmod`, `sudo`, `export`, `alias`, `which`, `tree`, `man`, …) with macOS-accurate messages. Every command is logged so lessons can check what you did. Lessons live in `lib/course/curriculum.ts`.
 
 ## AminaOS desktop
 

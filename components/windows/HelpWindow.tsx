@@ -3,32 +3,26 @@
 import { Terminal, Compass, BookOpen, MousePointer2 } from "lucide-react";
 
 const terminalCommands = [
-  { command: "help", description: "Show available commands" },
-  { command: "ls [-la]", description: "List directory contents (-la shows hidden files and details)" },
-  { command: "cd [path]", description: "Change directory" },
-  { command: "pwd", description: "Print working directory" },
-  { command: "cat [file]", description: "Display file contents" },
-  { command: "open [app|file|site]", description: "Open an application, a file, or a website in Safari" },
-  { command: "safari [address]", description: "Open a website in Safari, e.g. safari cooked.ai" },
-  { command: "grep [pattern] [file]", description: "Search for a pattern in a file" },
-  { command: "man [command]", description: "Show the manual page for a command" },
-  { command: "clear", description: "Clear the terminal screen" },
-  { command: "whoami", description: "Display the current user" },
-  { command: "date", description: "Show the current date and time" },
-  { command: "history", description: "List the commands you have run" },
+  { command: "pwd · ls · cd · tree", description: "See where you are, look around, move between folders" },
+  { command: "cat · head · tail · less", description: "Read files" },
+  { command: "mkdir · touch · echo > file", description: "Make folders and files" },
+  { command: "cp · mv · rm · rmdir", description: "Copy, move/rename and delete" },
+  { command: "grep · find · wc · sort · uniq", description: "Search, count and sort" },
+  { command: "|  >  >>  <  &&  ;", description: "Pipes, redirection and chaining" },
+  { command: "chmod · sudo · ls -l", description: "Permissions" },
+  { command: "export · env · alias · which", description: "Your shell environment" },
+  { command: "sh script.sh · ./script.sh", description: "Run scripts (with $1, $2 … arguments)" },
+  { command: "man <command> · help", description: "Read the manual for any command" },
+  { command: "open <app or site>", description: "Open apps and websites, e.g. open academy" },
 ];
 
 const safariTips = [
-  <>
-    Open <code className="font-mono text-blue-700 dark:text-blue-300">cooked.ai</code> in Safari (it’s in Favorites, on the
-    desktop, and the first thing you see after logging in).
-  </>,
-  <>Upload a pic and Google Gemini roasts it four ways: Chronically Online, Midwest Mom, Real New Yorker and Columbia Tour Guide.</>,
-  <>Signed-in users vote on every caption. The best one gets the COOKED badge, and the top caption of the day gets the banner.</>,
-  <>
-    Browse with the <strong>Hot</strong>, <strong>New</strong>, <strong>Top</strong> and <strong>My Pics</strong> tabs.
-  </>,
-  <>Safari knows a few other addresses too. Curious people tend to find them.</>,
+  <>Open <strong>Terminal Academy</strong> from the desktop or the first icon in the Dock.</>,
+  <>Each lesson explains one idea, gives you a few examples (click one to paste it), and lists tasks. Do them in the terminal on the right; they tick off as you go.</>,
+  <>Stuck? Reveal hints one at a time. The last hint gives you the exact command.</>,
+  <><strong>Module 1 is free.</strong> Sign in (top right) to unlock Modules 2–7 and save your progress; what you did as a guest comes with you.</>,
+  <>Finish all 7 modules to earn your certificate (and your A) on <strong>final_grade.pdf</strong>.</>,
+  <>Want to practice freely? The <strong>Terminal</strong> app is a playground whose files are saved in your browser.</>,
 ];
 
 const navigationTips = [
@@ -47,9 +41,9 @@ export default function HelpWindow() {
       <section>
         <div className="text-center mb-6">
           <BookOpen className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">AminaOS Help</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Terminal Academy Help</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            A macOS-inspired desktop with a working terminal and AI-powered cooked.ai in Safari
+            Learn the command line on a pretend Mac in your browser. Nothing you type can break anything.
           </p>
         </div>
       </section>
@@ -81,7 +75,7 @@ export default function HelpWindow() {
       <section>
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
           <Compass className="w-5 h-5" />
-          cooked.ai: get your pics roasted
+          How the course works
         </h2>
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-4">
           <div className="space-y-2">
@@ -113,7 +107,7 @@ export default function HelpWindow() {
 
       {/* Footer */}
       <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-gray-500 dark:text-gray-400 text-sm">Explore, get cooked, and have fun!</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Have fun, and go earn that A.</p>
       </div>
     </div>
   );

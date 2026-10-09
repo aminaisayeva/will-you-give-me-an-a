@@ -51,6 +51,8 @@ const techStacks: TechStack[] = [
 ];
 
 const highlights = [
+  "Terminal Academy: 7 modules, auto-checked lessons",
+  "A realistic zsh-like shell in the browser",
   "Pixel-perfect macOS desktop recreation",
   "Draggable, resizable, zoomable windows",
   "Terminal with a virtual filesystem",
@@ -91,9 +93,10 @@ export default function AboutOSWindow() {
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                   AminaOS (Grade Request Edition) is a class project for a Generative AI course at Columbia
                   University. It recreates the macOS desktop in the browser, complete with a dock, windows,
-                  a terminal and real user accounts. Its Safari opens cooked.ai, where Google Gemini roasts
-                  the photos you upload and everyone votes on which caption cooked hardest. (Rumor has it
-                  Safari can reach a few other sites, too.)
+                  a terminal and real user accounts, and turns it into a classroom: Terminal Academy teaches
+                  the command line from your first ls to your first script, checking your work as you go.
+                  Safari also opens cooked.ai, where Google Gemini roasts the photos you upload and everyone
+                  votes on the captions. (Rumor has it Safari can reach a few other sites, too.)
                 </p>
               </div>
             </div>

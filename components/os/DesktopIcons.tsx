@@ -8,7 +8,7 @@ import { useOS } from "@/lib/os/store";
 import { useMounted } from "@/lib/os/use-mounted";
 
 const ICON_W = 96;
-const ICON_H = 88;
+const ICON_H = 98;
 const TOP = 40;
 
 // Default layout: columns from the top-right corner, like Finder.

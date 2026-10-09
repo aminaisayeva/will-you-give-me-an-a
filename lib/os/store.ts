@@ -4,6 +4,7 @@ import { create } from "zustand";
 
 // Every app that can open as a window on the desktop.
 export const WINDOW_IDS = [
+  "academy",
   "grade",
   "safari",
   "mail",

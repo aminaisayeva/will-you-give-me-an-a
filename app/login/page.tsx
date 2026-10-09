@@ -5,7 +5,7 @@ import { toMenuAccount } from "@/lib/menu-account";
 import LoginScreen from "./LoginScreen";
 
 export const metadata: Metadata = {
-  title: "Log In · Will you give me an A?",
+  title: "Log In · Terminal Academy",
   description: "Sign in to unlock your desktop, transcript and settings.",
 };
 
