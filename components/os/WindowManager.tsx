@@ -9,7 +9,7 @@ import { useOS, WINDOW_IDS } from "@/lib/os/store";
 export default function WindowManager() {
   const windows = useOS((s) => s.windows);
   const focused = useOS((s) => s.focused);
-  const { closeWindow, minimizeWindow, focusWindow } = useOS.getState();
+  const { closeWindow, minimizeWindow, focusWindow, setFullscreen } = useOS.getState();
 
   // Each Window is position: fixed with its own z-index, so they share one
   // stacking order with the Grade Request dialog.
@@ -32,6 +32,7 @@ export default function WindowManager() {
               onClose={() => closeWindow(id)}
               onMinimize={() => minimizeWindow(id)}
               onFocus={() => focusWindow(id)}
+              onFullscreenChange={(full) => setFullscreen(id, full)}
             >
               <Content />
             </Window>

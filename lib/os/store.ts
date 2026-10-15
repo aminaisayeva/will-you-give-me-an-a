@@ -39,6 +39,8 @@ export type WindowState = {
   openCount: number;
   // Small per-window arguments, e.g. { url } for Safari or { pane } for Settings.
   params: Record<string, string>;
+  // Filling the screen (zoomed, or any window on a phone). Hides the Dock.
+  fullscreen: boolean;
 };
 
 type OSStore = {
@@ -54,9 +56,10 @@ type OSStore = {
   focusWindow: (id: WindowId) => void;
   setSpotlight: (open: boolean) => void;
   toggleDarkMode: () => void;
+  setFullscreen: (id: WindowId, fullscreen: boolean) => void;
 };
 
-const closed = (): WindowState => ({ open: false, minimized: false, zIndex: 10, openCount: 0, params: {} });
+const closed = (): WindowState => ({ open: false, minimized: false, zIndex: 10, openCount: 0, params: {}, fullscreen: false });
 
 export const useOS = create<OSStore>((set) => ({
   windows: Object.fromEntries(WINDOW_IDS.map((id) => [id, closed()])) as Record<WindowId, WindowState>,
@@ -86,7 +89,7 @@ export const useOS = create<OSStore>((set) => ({
 
   closeWindow: (id) =>
     set((s) => ({
-      windows: { ...s.windows, [id]: { ...s.windows[id], open: false, minimized: false, params: {} } },
+      windows: { ...s.windows, [id]: { ...s.windows[id], open: false, minimized: false, params: {}, fullscreen: false } },
       focused: s.focused === id ? null : s.focused,
     })),
 
@@ -110,4 +113,7 @@ export const useOS = create<OSStore>((set) => ({
 
   setSpotlight: (open) => set({ spotlightOpen: open }),
   toggleDarkMode: () => set((s) => ({ darkMode: !s.darkMode })),
+
+  setFullscreen: (id, fullscreen) =>
+    set((s) => (s.windows[id].fullscreen === fullscreen ? s : { windows: { ...s.windows, [id]: { ...s.windows[id], fullscreen } } })),
 }));

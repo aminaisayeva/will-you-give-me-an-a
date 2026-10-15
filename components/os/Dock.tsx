@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import AppIcon from "@/components/os/AppIcon";
 import { APPS, DOCK } from "@/components/os/apps";
 import { useOS, WINDOW_IDS, type WindowId } from "@/lib/os/store";
@@ -24,16 +25,36 @@ function DockTile({ id, running, onClick }: { id: WindowId; running: boolean; on
   );
 }
 
-// Apps on the left, minimized windows after a divider, then Trash.
+// Apps on the left, minimized windows after a divider, then Trash. Hides
+// itself while a window fills the screen; point at the bottom edge to bring it
+// back, like macOS's "automatically hide and show the Dock".
 export default function Dock() {
   const windows = useOS((s) => s.windows);
   const openWindow = useOS((s) => s.openWindow);
   const minimized = WINDOW_IDS.filter((id) => windows[id].open && windows[id].minimized && !DOCK.includes(id));
+  const fullscreen = WINDOW_IDS.some((id) => windows[id].open && !windows[id].minimized && windows[id].fullscreen);
+  const [peek, setPeek] = useState(false);
+  const hidden = fullscreen && !peek;
 
   return (
+    <>
+    {fullscreen && (
+      // Invisible strip along the bottom edge that reveals the Dock.
+      <div className="fixed inset-x-0 bottom-0 h-1.5" style={{ zIndex: 5001 }} onPointerEnter={() => setPeek(true)} aria-hidden="true" />
+    )}
     <nav
-      className="fixed bottom-2 left-1/2 flex max-w-[calc(100vw-16px)] -translate-x-1/2 items-end gap-1.5 overflow-x-auto rounded-2xl border border-white/20 bg-white/20 px-2 pb-1.5 pt-2 shadow-2xl backdrop-blur-2xl dark:bg-black/30 sm:gap-3 sm:overflow-visible sm:px-4"
-      style={{ zIndex: 5000 }}
+      aria-label="Dock"
+      onPointerLeave={() => setPeek(false)}
+      onFocus={() => setPeek(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setPeek(false);
+      }}
+      className="fixed bottom-2 left-1/2 flex max-w-[calc(100vw-16px)] items-end gap-1.5 overflow-x-auto rounded-2xl border border-white/20 bg-white/20 px-2 pb-1.5 pt-2 shadow-2xl backdrop-blur-2xl dark:bg-black/30 sm:gap-3 sm:overflow-visible sm:px-4"
+      style={{
+        zIndex: 5000,
+        transform: `translateX(-50%) translateY(${hidden ? "calc(100% + 16px)" : "0"})`,
+        transition: "transform 260ms cubic-bezier(0.32, 0.72, 0, 1)",
+      }}
     >
       {DOCK.map((id) => (
         <DockTile key={id} id={id} running={windows[id].open} onClick={() => openWindow(id)} />
@@ -44,5 +65,6 @@ export default function Dock() {
       ))}
       <DockTile id="trash" running={windows.trash.open} onClick={() => openWindow("trash")} />
     </nav>
+    </>
   );
 }

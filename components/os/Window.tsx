@@ -48,6 +48,7 @@ export default function Window({
   onClose,
   onMinimize,
   onFocus,
+  onFullscreenChange,
   toolbar,
   children,
 }: {
@@ -60,6 +61,8 @@ export default function Window({
   onClose: () => void;
   onMinimize: () => void;
   onFocus: () => void;
+  // Told whenever the window starts or stops filling the screen.
+  onFullscreenChange?: (fullscreen: boolean) => void;
   toolbar?: ReactNode;
   children: ReactNode;
 }) {
@@ -68,6 +71,14 @@ export default function Window({
   const [maximized, setMaximized] = useState(false);
   const beforeMax = useRef<Rect | null>(null);
   const gesture = useRef<{ kind: "move" | Handle; startX: number; startY: number; start: Rect } | null>(null);
+
+  // Zoomed windows (and every window on a phone) fill the screen.
+  const fullscreen = mobile || maximized;
+  useEffect(() => {
+    onFullscreenChange?.(fullscreen);
+    // Only re-run when the value changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fullscreen]);
 
   const toggleMaximize = () => {
     onFocus();
