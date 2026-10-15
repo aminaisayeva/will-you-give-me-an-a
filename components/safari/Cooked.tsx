@@ -15,7 +15,7 @@ import { getMyCookedAccount, type MyCookedAccount } from "@/app/actions/cooked-a
 import { photoUrl, STYLE_EMOJI, type Caption } from "@/lib/cooked";
 import { avatarUrl } from "@/lib/supabase";
 
-const TABS: { id: FeedTab; label: string; about: string }[] = [
+export const TABS: { id: FeedTab; label: string; about: string }[] = [
   { id: "hot", label: "Hot", about: "Getting votes right now (from the past week)." },
   { id: "new", label: "New", about: "The newest posts first." },
   { id: "top", label: "Top", about: "The highest-voted posts of all time." },
@@ -275,7 +275,7 @@ export default function Cooked() {
   );
 }
 
-function DailyBanner({ daily, onOpen }: { daily: NonNullable<CookOfTheDay>; onOpen: () => void }) {
+export function DailyBanner({ daily, onOpen }: { daily: NonNullable<CookOfTheDay>; onOpen: () => void }) {
   return (
     <section aria-label="Cook of the day" className="flex items-center gap-4 overflow-hidden rounded-2xl bg-stone-900 p-3 pr-4 text-white">
       {/* eslint-disable-next-line @next/next/no-img-element -- Supabase Storage URL */}
@@ -294,7 +294,7 @@ function DailyBanner({ daily, onOpen }: { daily: NonNullable<CookOfTheDay>; onOp
   );
 }
 
-function FeedSkeleton() {
+export function FeedSkeleton() {
   return (
     <div className="mt-4 flex flex-col gap-5" aria-busy="true" aria-label="Loading posts">
       {[0, 1].map((i) => (
@@ -312,7 +312,7 @@ function FeedSkeleton() {
   );
 }
 
-function EmptyFeed({ tab, signedIn, onPost, onBrowse }: { tab: FeedTab; signedIn: boolean; onPost: () => void; onBrowse: () => void }) {
+export function EmptyFeed({ tab, signedIn, onPost, onBrowse }: { tab: FeedTab; signedIn: boolean; onPost: () => void; onBrowse: () => void }) {
   const copy =
     tab === "mine"
       ? signedIn

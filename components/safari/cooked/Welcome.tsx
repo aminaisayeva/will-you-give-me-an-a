@@ -94,6 +94,58 @@ export default function Welcome({
           <SamplePost />
         </section>
 
+        <WelcomeSections />
+      </div>
+    </div>
+  );
+}
+
+export function SamplePost() {
+  return (
+    <figure aria-label="Example post" className="relative mx-auto w-full max-w-md">
+      <div className="absolute -inset-3 -z-0 rotate-2 rounded-[28px] bg-orange-200/50" aria-hidden="true" />
+      <div className="relative overflow-hidden rounded-2xl bg-white shadow-[0_20px_45px_-20px_rgba(120,53,15,0.45)] ring-1 ring-stone-200">
+        <div className="flex h-36 items-center justify-center bg-[radial-gradient(circle_at_30%_30%,#fde68a,#f59e0b_55%,#b45309)] text-[64px]" aria-hidden="true">
+          {"\u{1F355}"}
+        </div>
+        <div className="p-4">
+          <p className="text-[12px] text-stone-500">
+            <span className="font-semibold text-stone-800">Priya Raman</span> · 2h · “my $1.50 slice on Broadway”
+          </p>
+          <ul className="mt-3 space-y-1.5">
+            {SAMPLE.map((c) => {
+              const best = c.score === 12;
+              return (
+                <li
+                  key={c.style}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 ${best ? "bg-orange-50 ring-1 ring-orange-300" : "bg-stone-50"}`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1.5 text-[10.5px] font-semibold text-stone-500">
+                      <span aria-hidden="true">{c.emoji}</span> {c.style}
+                      {best && <span className="rounded-sm bg-orange-600 px-1 text-[9.5px] font-bold tracking-wide text-white">COOKED</span>}
+                    </p>
+                    <p className="text-[13px] leading-snug">{c.text}</p>
+                  </div>
+                  <span className={`flex shrink-0 items-center gap-0.5 text-[12px] font-bold tabular-nums ${best ? "text-orange-600" : "text-stone-500"}`}>
+                    <ChevronUp className="h-4 w-4" strokeWidth={2.5} /> {c.score}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+      <figcaption className="sr-only">An example: four AI captions on a pizza photo, with votes.</figcaption>
+    </figure>
+  );
+}
+
+// "How it works", the four voices and "Good to know". Shared with the
+// standalone landing page.
+export function WelcomeSections() {
+  return (
+    <>
         {/* How it works */}
         <section className="mt-16" aria-labelledby="how-it-works">
           <h2 id="how-it-works" className="text-[20px] font-bold tracking-tight">
@@ -150,48 +202,6 @@ export default function Welcome({
             ))}
           </ul>
         </section>
-      </div>
-    </div>
-  );
-}
-
-function SamplePost() {
-  return (
-    <figure aria-label="Example post" className="relative mx-auto w-full max-w-md">
-      <div className="absolute -inset-3 -z-0 rotate-2 rounded-[28px] bg-orange-200/50" aria-hidden="true" />
-      <div className="relative overflow-hidden rounded-2xl bg-white shadow-[0_20px_45px_-20px_rgba(120,53,15,0.45)] ring-1 ring-stone-200">
-        <div className="flex h-36 items-center justify-center bg-[radial-gradient(circle_at_30%_30%,#fde68a,#f59e0b_55%,#b45309)] text-[64px]" aria-hidden="true">
-          {"\u{1F355}"}
-        </div>
-        <div className="p-4">
-          <p className="text-[12px] text-stone-500">
-            <span className="font-semibold text-stone-800">Priya Raman</span> · 2h · “my $1.50 slice on Broadway”
-          </p>
-          <ul className="mt-3 space-y-1.5">
-            {SAMPLE.map((c) => {
-              const best = c.score === 12;
-              return (
-                <li
-                  key={c.style}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 ${best ? "bg-orange-50 ring-1 ring-orange-300" : "bg-stone-50"}`}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-1.5 text-[10.5px] font-semibold text-stone-500">
-                      <span aria-hidden="true">{c.emoji}</span> {c.style}
-                      {best && <span className="rounded-sm bg-orange-600 px-1 text-[9.5px] font-bold tracking-wide text-white">COOKED</span>}
-                    </p>
-                    <p className="text-[13px] leading-snug">{c.text}</p>
-                  </div>
-                  <span className={`flex shrink-0 items-center gap-0.5 text-[12px] font-bold tabular-nums ${best ? "text-orange-600" : "text-stone-500"}`}>
-                    <ChevronUp className="h-4 w-4" strokeWidth={2.5} /> {c.score}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </div>
-      <figcaption className="sr-only">An example: four AI captions on a pizza photo, with votes.</figcaption>
-    </figure>
+    </>
   );
 }

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Terminal Academy · Learn the terminal",
-  description: "A pretend Mac in your browser where you learn the command line, from your first ls to your first script.",
+  title: { default: "cooked.ai · Post a pic. AI roasts it.", template: "%s · cooked.ai" },
+  description: "Upload a photo, get four AI captions in four voices, and vote on which one cooked hardest.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );
 }

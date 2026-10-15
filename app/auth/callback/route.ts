@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { hasFullName } from "@/lib/supabase";
+import { profileFromSignupMetadata } from "@/lib/cooked-session";
 import { createClient } from "@/lib/supabase/server";
-import { UNLOCK_COOKIE, unlockCookieOptions } from "@/lib/lock";
 import { RETURN_TO_COOKIE, safeReturnPath } from "@/lib/return-to";
 
 // Google redirects here (via Supabase) with a one-time code after sign-in.
@@ -35,17 +34,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // First sign-in (or names never filled in): send them to the setup assistant.
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("first_name, last_name")
-    .eq("id", data.user.id)
-    .maybeSingle();
-
-  // Back to where sign-in started (e.g. cooked.ai), once names are set up.
+  // New here (no name or no @username yet)? Finish the profile first.
+  await profileFromSignupMetadata(supabase, data.user);
+  const [{ data: names }, { data: cooked }] = await Promise.all([
+    supabase.from("profiles").select("first_name, last_name").eq("id", data.user.id).maybeSingle(),
+    supabase.from("cooked_profiles").select("user_id").eq("user_id", data.user.id).maybeSingle(),
+  ]);
   const returnTo = safeReturnPath(request.cookies.get(RETURN_TO_COOKIE)?.value);
-  const response = NextResponse.redirect(`${base}${hasFullName(profile) ? (returnTo ?? "/") : "/welcome"}`);
-  response.cookies.set(UNLOCK_COOKIE, "1", unlockCookieOptions);
-  if (returnTo && hasFullName(profile)) response.cookies.delete(RETURN_TO_COOKIE);
+  const done = Boolean(names?.first_name?.trim() && names?.last_name?.trim() && cooked);
+  const response = NextResponse.redirect(`${base}${done ? (returnTo ?? "/feed") : "/onboarding"}`);
+  if (done) response.cookies.delete(RETURN_TO_COOKIE);
   return response;
 }

@@ -1,7 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { refresh } from "next/cache";
+import { RETURN_TO_COOKIE, safeReturnPath } from "@/lib/return-to";
 import { AVATAR_BUCKET, MIN_PASSWORD } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
 import { normaliseUsername, usernameProblem, type CookedProfile } from "@/lib/cooked";
@@ -188,4 +189,54 @@ export async function cookedLogIn(input: { email: string; password: string }): P
   }
   refresh();
   return { ok: true, error: null };
+}
+
+export type OnboardingState = { error: string | null; next?: string };
+
+// Finish your profile (after Google or any first sign-in): first and last
+// name (assignment 3's name prompt), a @username, and an optional photo.
+export async function completeOnboarding(_prev: OnboardingState, formData: FormData): Promise<OnboardingState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Your session expired. Log in again." };
+
+  const firstName = String(formData.get("first_name") ?? "").trim();
+  const lastName = String(formData.get("last_name") ?? "").trim();
+  const username = normaliseUsername(String(formData.get("username") ?? ""));
+  if (!firstName || firstName.length > 60) return { error: "Enter your first name." };
+  if (!lastName || lastName.length > 60) return { error: "Enter your last name." };
+  const problem = usernameProblem(username);
+  if (problem) return { error: problem };
+  if (await usernameTaken(supabase, username, user.id)) return { error: `@${username} is taken. Try another one.` };
+
+  const { error: nameError } = await supabase.from("profiles").update({ first_name: firstName, last_name: lastName }).eq("id", user.id);
+  if (nameError) return { error: `Couldn't save your name: ${nameError.message}` };
+
+  let avatarPath: string | undefined;
+  const avatar = formData.get("avatar");
+  if (avatar instanceof File && avatar.size > 0) {
+    const ext = AVATAR_TYPES[avatar.type];
+    if (!ext) return { error: "Use a JPEG, PNG or WebP image for your photo." };
+    if (avatar.size > 2 * 1024 * 1024) return { error: "That photo is over 2 MB." };
+    avatarPath = `${user.id}/cooked-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from(AVATAR_BUCKET).upload(avatarPath, avatar, { contentType: avatar.type, cacheControl: "31536000" });
+    if (error) return { error: `Couldn't upload your photo: ${error.message}` };
+  }
+
+  const displayName = `${firstName} ${lastName}`.slice(0, 40);
+  const { data: existing } = await supabase.from("cooked_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
+  const { error } = existing
+    ? await supabase
+        .from("cooked_profiles")
+        .update({ username, ...(avatarPath ? { avatar_path: avatarPath } : {}) })
+        .eq("user_id", user.id)
+    : await supabase.from("cooked_profiles").insert({ username, display_name: displayName, ...(avatarPath ? { avatar_path: avatarPath } : {}) });
+  if (error) return { error: error.code === "23505" ? `@${username} was just taken. Try another one.` : error.message };
+
+  const jar = await cookies();
+  const returnTo = safeReturnPath(jar.get(RETURN_TO_COOKIE)?.value);
+  if (returnTo) jar.delete(RETURN_TO_COOKIE);
+  return { error: null, next: returnTo && !returnTo.startsWith("/safari") ? returnTo : "/feed" };
 }

@@ -3,7 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Routes that need a signed-in user. Pages re-check the user themselves; this
 // is the fast, optimistic redirect.
-const PROTECTED = ["/transcript", "/settings", "/mail", "/welcome"];
+const PROTECTED = ["/profile", "/onboarding"];
+
+// APIs of the retired macOS desktop (the website builder).
+const RETIRED_APIS = ["/api/sites"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -52,6 +55,9 @@ export async function proxy(request: NextRequest) {
     return redirect;
   };
 
+  if (RETIRED_APIS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   if (!user && PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return redirectTo("/login");
   }

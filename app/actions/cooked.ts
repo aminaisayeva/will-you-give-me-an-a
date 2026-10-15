@@ -73,6 +73,43 @@ export async function listPhotos(tab: FeedTab): Promise<Feed> {
   };
 }
 
+export type ProfilePage = {
+  profile: { user_id: string; username: string; display_name: string; avatar_path: string | null; created_at: string };
+  feed: Feed;
+  totalScore: number;
+} | null;
+
+// A public /u/<username> page: their profile and their posts.
+export async function profilePage(rawUsername: string): Promise<ProfilePage> {
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("cooked_profiles")
+    .select("user_id, username, display_name, avatar_path, created_at")
+    .eq("username", rawUsername.toLowerCase())
+    .maybeSingle();
+  if (!profile) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("photos")
+    .select(PHOTO_COLUMNS)
+    .eq("author_id", profile.user_id)
+    .order("created_at", { ascending: false })
+    .limit(60);
+  const posts = await withAuthors(supabase, ((data ?? []) as PhotoPost[]).map(sortCaptions));
+  return {
+    profile,
+    totalScore: posts.reduce((sum, p) => sum + p.score, 0),
+    feed: {
+      posts,
+      myVotes: user ? await myVotesFor(supabase, posts.flatMap((p) => p.captions.map((c) => c.id))) : {},
+      userId: user?.id ?? null,
+      error: error?.message ?? null,
+    },
+  };
+}
+
 export async function getPhoto(id: string): Promise<{ post: PhotoPost | null; myVotes: Record<string, 1 | -1> }> {
   const supabase = await createClient();
   const {

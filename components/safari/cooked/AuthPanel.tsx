@@ -20,9 +20,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { AuthMode } from "./account";
 import { focusRing, setWelcomed } from "./shared";
 
-const field =
+export const field =
   "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-[14px] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-orange-500 focus:ring-[3px] focus:ring-orange-200";
-const primary = `flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-orange-700 active:translate-y-px disabled:opacity-60 ${focusRing}`;
+export const primary = `flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-orange-700 active:translate-y-px disabled:opacity-60 ${focusRing}`;
 
 function GoogleG() {
   return (
@@ -55,7 +55,7 @@ function useUsernameCheck(username: string) {
   return username ? result : null;
 }
 
-function UsernameField({ value, onChange, autoFocus }: { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
+export function UsernameField({ value, onChange, autoFocus }: { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
   const check = useUsernameCheck(value);
   return (
     <div>
@@ -122,7 +122,7 @@ function Shell({ title, subtitle, onClose, children }: { title: string; subtitle
   );
 }
 
-function GoogleButton() {
+export function GoogleButton({ returnTo = "/safari/cooked.ai" }: { returnTo?: string }) {
   const [pending, setPending] = useState(false);
   return (
     <button
@@ -130,7 +130,7 @@ function GoogleButton() {
       disabled={pending}
       onClick={async () => {
         setPending(true);
-        rememberReturnTo("/safari/cooked.ai");
+        rememberReturnTo(returnTo);
         setWelcomed(true);
         await createClient().auth.signInWithOAuth({
           provider: "google",
@@ -144,7 +144,7 @@ function GoogleButton() {
   );
 }
 
-function Divider() {
+export function Divider() {
   return (
     <div className="my-4 flex items-center gap-3 text-[12px] text-stone-400">
       <span className="h-px flex-1 bg-stone-300" /> or with email <span className="h-px flex-1 bg-stone-300" />
@@ -152,7 +152,7 @@ function Divider() {
   );
 }
 
-function ErrorText({ error }: { error: string | null }) {
+export function ErrorText({ error }: { error: string | null }) {
   return error ? (
     <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-700">
       {error}

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import Avatar from "@/components/Avatar";
 import { avatarUrl } from "@/lib/supabase";
@@ -66,7 +67,13 @@ export default function PostCard({
                 size={32}
               />
               <p className="min-w-0 text-[13px] leading-tight text-stone-500">
-                <span className="block truncate font-semibold text-stone-900">{post.author?.display_name ?? post.author_name ?? "a student"}</span>
+                {post.author ? (
+                  <Link href={`/u/${post.author.username}`} className={`block truncate rounded font-semibold text-stone-900 hover:underline ${focusRing}`}>
+                    {post.author.display_name}
+                  </Link>
+                ) : (
+                  <span className="block truncate font-semibold text-stone-900">{post.author_name ?? "a student"}</span>
+                )}
                 <span className="block truncate">
                   {post.author ? `@${post.author.username} · ` : ""}
                   {timeAgo(post.created_at)}
