@@ -2,13 +2,18 @@
 
 import { Flame, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import Avatar from "@/components/Avatar";
 import { useAccount } from "@/components/os/AccountContext";
+import { CookedAccountProvider, type AuthMode } from "@/components/safari/cooked/account";
+import AuthPanel from "@/components/safari/cooked/AuthPanel";
 import Composer, { type ComposerHandle } from "@/components/safari/cooked/Composer";
 import PostCard from "@/components/safari/cooked/PostCard";
 import { focusRing, setWelcomed, useWelcomed } from "@/components/safari/cooked/shared";
 import Welcome from "@/components/safari/cooked/Welcome";
 import { cookOfTheDay, getPhoto, listPhotos, type CookOfTheDay, type Feed, type FeedTab } from "@/app/actions/cooked";
+import { getMyCookedAccount, type MyCookedAccount } from "@/app/actions/cooked-account";
 import { photoUrl, STYLE_EMOJI, type Caption } from "@/lib/cooked";
+import { avatarUrl } from "@/lib/supabase";
 
 const TABS: { id: FeedTab; label: string; about: string }[] = [
   { id: "hot", label: "Hot", about: "Getting votes right now (from the past week)." },
@@ -28,6 +33,33 @@ export default function Cooked() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [fresh, setFresh] = useState<string | null>(null);
   const composerRef = useRef<ComposerHandle>(null);
+  const [me, setMe] = useState<MyCookedAccount | null>(null);
+  const [auth, setAuth] = useState<AuthMode | null>(null);
+  const [meVersion, setMeVersion] = useState(0);
+  const accountId = account?.id ?? null;
+
+  // Your cooked.ai profile (reloaded after signing in/up or editing it).
+  useEffect(() => {
+    let cancelled = false;
+    getMyCookedAccount().then((m) => {
+      if (!cancelled) setMe(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId, meVersion]);
+
+  const reloadMe = () => {
+    setMeVersion((v) => v + 1);
+    setRefreshKey((k) => k + 1);
+  };
+  const hasProfile = Boolean(me?.profile);
+  // "Post a pic" for everyone: sign up, create a profile, or open the picker.
+  const startPost = () => {
+    if (!account) setAuth("signup");
+    else if (!hasProfile) setAuth("profile");
+    else composerRef.current?.pick();
+  };
 
   useEffect(() => {
     if (!welcomed) return;
@@ -48,17 +80,29 @@ export default function Cooked() {
     document.getElementById(`post-${fresh}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [fresh]);
 
+  const panel = auth && (
+    <AuthPanel mode={auth} me={me} onMode={setAuth} onClose={() => setAuth(null)} onChanged={reloadMe} />
+  );
+
   if (!welcomed) {
     return (
-      <Welcome
-        signedIn={!!account}
-        onBrowse={() => setWelcomed(true)}
-        onPost={() => {
-          setWelcomed(true);
-          // The composer mounts on the next frame.
-          window.requestAnimationFrame(() => composerRef.current?.pick());
-        }}
-      />
+      <CookedAccountProvider value={{ me, openAuth: setAuth }}>
+        <div className="relative h-full">
+          <Welcome
+            signedIn={!!account}
+            hasProfile={hasProfile}
+            onBrowse={() => setWelcomed(true)}
+            onSignUp={() => setAuth(account ? "profile" : "signup")}
+            onLogIn={() => setAuth("login")}
+            onPost={() => {
+              setWelcomed(true);
+              // The composer mounts on the next frame.
+              window.requestAnimationFrame(() => composerRef.current?.pick());
+            }}
+          />
+          {panel}
+        </div>
+      </CookedAccountProvider>
     );
   }
 
@@ -94,6 +138,8 @@ export default function Cooked() {
     });
 
   return (
+    <CookedAccountProvider value={{ me, openAuth: setAuth }}>
+    <div className="relative h-full">
     <div className="@container h-full overflow-y-auto scroll-smooth bg-[#fbf7f2] text-stone-900">
       {/* Site header */}
       <header className="sticky top-0 z-20 border-b border-stone-200/80 bg-[#fbf7f2]/90 backdrop-blur">
@@ -131,18 +177,28 @@ export default function Cooked() {
             >
               How it works
             </button>
-            {account ? (
+            {!account && (
+              <button type="button" onClick={() => setAuth("login")} className={`rounded text-[13px] font-semibold text-stone-700 hover:text-stone-900 ${focusRing}`}>
+                Log in
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={startPost}
+              className={`flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-orange-700 active:translate-y-px ${focusRing}`}
+            >
+              <Plus className="h-4 w-4" /> {account ? "Post a pic" : "Sign up"}
+            </button>
+            {account && me?.profile && (
               <button
                 type="button"
-                onClick={() => composerRef.current?.pick()}
-                className={`flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-orange-700 active:translate-y-px ${focusRing}`}
+                onClick={() => setAuth("edit")}
+                aria-label={`Your profile, @${me.profile.username}`}
+                title={`@${me.profile.username}`}
+                className={`rounded-full ${focusRing}`}
               >
-                <Plus className="h-4 w-4" /> Post a pic
+                <Avatar src={avatarUrl(me.profile.avatar_path)} name={me.profile.display_name} size={30} />
               </button>
-            ) : (
-              <a href="/login" className={`rounded-lg bg-stone-900 px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-stone-700 ${focusRing}`}>
-                Sign in
-              </a>
             )}
           </div>
         </div>
@@ -167,7 +223,13 @@ export default function Cooked() {
         {daily && <DailyBanner daily={daily} onOpen={() => setFresh(daily.post.id)} />}
 
         <div className="mt-4">
-          <Composer ref={composerRef} signedIn={!!account} onPosted={onPosted} />
+          <Composer
+            ref={composerRef}
+            signedIn={!!account}
+            hasProfile={hasProfile}
+            onNeedAccount={() => setAuth(account ? "profile" : "signup")}
+            onPosted={onPosted}
+          />
         </div>
 
         <div className="mt-7 flex items-baseline justify-between gap-3">
@@ -185,7 +247,7 @@ export default function Cooked() {
             </button>
           </p>
         ) : !feed || feed.posts.length === 0 ? (
-          <EmptyFeed tab={tab} signedIn={!!account} onPost={() => composerRef.current?.pick()} onBrowse={() => switchTab("new")} />
+          <EmptyFeed tab={tab} signedIn={!!account} onPost={startPost} onBrowse={() => switchTab("new")} />
         ) : (
           <ol className="mt-4 flex flex-col gap-5">
             {feed.posts.map((post, i) => (
@@ -205,6 +267,9 @@ export default function Cooked() {
         )}
       </main>
     </div>
+    {panel}
+    </div>
+    </CookedAccountProvider>
   );
 }
 
@@ -259,15 +324,9 @@ function EmptyFeed({ tab, signedIn, onPost, onBrowse }: { tab: FeedTab; signedIn
       <p className="text-[16px] font-semibold">{copy.title}</p>
       <p className="mx-auto mt-1 max-w-sm text-[13.5px] text-stone-600">{copy.text}</p>
       <div className="mt-4 flex justify-center gap-4">
-        {signedIn ? (
-          <button type="button" onClick={onPost} className={`rounded-lg bg-orange-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-orange-700 ${focusRing}`}>
-            Post a pic
-          </button>
-        ) : (
-          <a href="/login" className={`rounded-lg bg-stone-900 px-4 py-2 text-[13px] font-semibold text-white hover:bg-stone-700 ${focusRing}`}>
-            Sign in to post
-          </a>
-        )}
+        <button type="button" onClick={onPost} className={`rounded-lg bg-orange-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-orange-700 ${focusRing}`}>
+          {signedIn ? "Post a pic" : "Sign up to post"}
+        </button>
         {tab === "hot" && (
           <button type="button" onClick={onBrowse} className={`rounded text-[13px] font-medium text-stone-700 underline-offset-4 hover:underline ${focusRing}`}>
             See new posts

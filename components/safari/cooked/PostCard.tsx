@@ -2,6 +2,9 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useTransition } from "react";
+import Avatar from "@/components/Avatar";
+import { avatarUrl } from "@/lib/supabase";
+import { useCookedAccount } from "./account";
 import PromptPanel from "@/components/safari/PromptPanel";
 import { timeAgo } from "@/components/safari/util";
 import { deletePhoto, voteOnCaption } from "@/app/actions/cooked";
@@ -56,9 +59,20 @@ export default function PostCard({
 
         <div className="flex min-w-0 flex-col p-4 @2xl:p-5">
           <header>
-            <p className="text-[13px] text-stone-500">
-              <span className="font-semibold text-stone-900">{post.author_name ?? "a student"}</span> · {timeAgo(post.created_at)}
-            </p>
+            <div className="flex items-center gap-2.5">
+              <Avatar
+                src={post.author ? avatarUrl(post.author.avatar_path) : null}
+                name={post.author?.display_name ?? post.author_name ?? "?"}
+                size={32}
+              />
+              <p className="min-w-0 text-[13px] leading-tight text-stone-500">
+                <span className="block truncate font-semibold text-stone-900">{post.author?.display_name ?? post.author_name ?? "a student"}</span>
+                <span className="block truncate">
+                  {post.author ? `@${post.author.username} · ` : ""}
+                  {timeAgo(post.created_at)}
+                </span>
+              </p>
+            </div>
             {post.prompt && <p className="mt-1 text-[14px] text-stone-700">“{post.prompt}”</p>}
           </header>
 
@@ -137,11 +151,13 @@ function CaptionRow({
   onChange: (caption: Caption, myVote: 1 | -1 | 0) => void;
 }) {
   const [pending, start] = useTransition();
-  const [note, setNote] = useState<"signin" | "own" | string | null>(null);
+  const [note, setNote] = useState<"signin" | "own" | "profile" | string | null>(null);
+  const { me, openAuth } = useCookedAccount();
 
   const vote = (value: 1 | -1) => {
     if (!userId) return setNote("signin");
     if (mine) return setNote("own");
+    if (me && !me.profile) return setNote("profile");
     const next = myVote === value ? 0 : value;
     start(async () => {
       const res = await voteOnCaption(caption.id, next);
@@ -207,9 +223,19 @@ function CaptionRow({
           {note === "signin" ? (
             <>
               Voting needs a free account.
-              <a href="/login" className={`rounded font-semibold text-orange-700 underline-offset-4 hover:underline ${focusRing}`}>
-                Sign in
-              </a>
+              <button type="button" onClick={() => openAuth("signup")} className={`rounded font-semibold text-orange-700 underline-offset-4 hover:underline ${focusRing}`}>
+                Sign up
+              </button>
+              <button type="button" onClick={() => openAuth("login")} className={`rounded font-semibold text-stone-700 underline-offset-4 hover:underline ${focusRing}`}>
+                Log in
+              </button>
+            </>
+          ) : note === "profile" ? (
+            <>
+              Pick a @username to start voting.
+              <button type="button" onClick={() => openAuth("profile")} className={`rounded font-semibold text-orange-700 underline-offset-4 hover:underline ${focusRing}`}>
+                Create profile
+              </button>
             </>
           ) : note === "own" ? (
             "You can’t vote on captions for your own pic."

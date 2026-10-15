@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { hasFullName } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
 import { UNLOCK_COOKIE, unlockCookieOptions } from "@/lib/lock";
+import { RETURN_TO_COOKIE, safeReturnPath } from "@/lib/return-to";
 
 // Google redirects here (via Supabase) with a one-time code after sign-in.
 export async function GET(request: NextRequest) {
@@ -41,7 +42,10 @@ export async function GET(request: NextRequest) {
     .eq("id", data.user.id)
     .maybeSingle();
 
-  const response = NextResponse.redirect(`${base}${hasFullName(profile) ? "/" : "/welcome"}`);
+  // Back to where sign-in started (e.g. cooked.ai), once names are set up.
+  const returnTo = safeReturnPath(request.cookies.get(RETURN_TO_COOKIE)?.value);
+  const response = NextResponse.redirect(`${base}${hasFullName(profile) ? (returnTo ?? "/") : "/welcome"}`);
   response.cookies.set(UNLOCK_COOKIE, "1", unlockCookieOptions);
+  if (returnTo && hasFullName(profile)) response.cookies.delete(RETURN_TO_COOKIE);
   return response;
 }

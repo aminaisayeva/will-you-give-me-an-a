@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return json({ error: "Sign in to get your pics cooked." }, 401);
+  const { data: me } = await supabase.from("cooked_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
+  if (!me) return json({ error: "Create your cooked.ai profile first." }, 403);
 
   const form = await request.formData().catch(() => null);
   const image = form?.get("image");

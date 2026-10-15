@@ -1,6 +1,8 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { refresh } from "next/cache";
+import { RETURN_TO_COOKIE, safeReturnPath } from "@/lib/return-to";
 import { redirect } from "next/navigation";
 import { AVATAR_BUCKET, getSupabase, MAX_AVATAR_BYTES, MIN_PASSWORD } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
@@ -60,7 +62,10 @@ async function saveNames(formData: FormData) {
 export async function completeSetup(_prev: FormState, formData: FormData): Promise<FormState> {
   const error = await saveNames(formData);
   if (error) return fail(error);
-  redirect("/");
+  const jar = await cookies();
+  const returnTo = safeReturnPath(jar.get(RETURN_TO_COOKIE)?.value);
+  if (returnTo) jar.delete(RETURN_TO_COOKIE);
+  redirect(returnTo ?? "/");
 }
 
 // Users & Groups pane.

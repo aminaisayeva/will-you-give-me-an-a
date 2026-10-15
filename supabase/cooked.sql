@@ -182,3 +182,56 @@ create policy "Users list their own photos"
 create policy "Users delete their own photos"
   on storage.objects for delete to authenticated
   using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- ---------------------------------------------------------------------------
+-- Migration "cooked_profiles": cooked.ai has its own public profile per user
+-- (a @username, a display name and an optional avatar), separate from the
+-- Mac account's name. Posting and voting require one.
+
+create table public.cooked_profiles (
+  user_id uuid primary key default auth.uid() references public.profiles (id) on delete cascade,
+  username text not null unique check (username ~ '^[a-z0-9_]{3,20}$'),
+  display_name text not null check (char_length(display_name) between 1 and 40),
+  -- Path in the "avatars" bucket; must be inside the user's own folder.
+  avatar_path text check (avatar_path is null or split_part(avatar_path, '/', 1) = user_id::text),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create trigger cooked_profiles_touch_updated_at
+  before update on public.cooked_profiles
+  for each row execute function public.touch_updated_at();
+
+alter table public.cooked_profiles enable row level security;
+
+create policy "Anyone can see cooked.ai profiles"
+  on public.cooked_profiles for select to anon, authenticated using (true);
+
+create policy "Users create their own cooked.ai profile"
+  on public.cooked_profiles for insert to authenticated
+  with check (user_id = (select auth.uid()));
+
+create policy "Users edit their own cooked.ai profile"
+  on public.cooked_profiles for update to authenticated
+  using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+
+revoke insert, update, delete on public.cooked_profiles from anon, authenticated;
+grant insert (username, display_name, avatar_path) on public.cooked_profiles to authenticated;
+grant update (username, display_name, avatar_path) on public.cooked_profiles to authenticated;
+
+alter policy "Signed-in users post their own photos" on public.photos
+  with check (
+    author_id = (select auth.uid())
+    and exists (select 1 from public.cooked_profiles c where c.user_id = (select auth.uid()))
+  );
+
+alter policy "Users vote on other people's captions" on public.caption_votes
+  with check (
+    user_id = (select auth.uid())
+    and exists (select 1 from public.cooked_profiles c where c.user_id = (select auth.uid()))
+    and not exists (
+      select 1 from public.captions c join public.photos p on p.id = c.photo_id
+       where c.id = caption_id and p.author_id = (select auth.uid())
+    )
+  );

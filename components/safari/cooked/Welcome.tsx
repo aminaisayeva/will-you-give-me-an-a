@@ -19,12 +19,18 @@ const STEPS = [
 // First-visit landing page for cooked.ai.
 export default function Welcome({
   signedIn,
+  hasProfile,
   onPost,
   onBrowse,
+  onSignUp,
+  onLogIn,
 }: {
   signedIn: boolean;
+  hasProfile: boolean;
   onPost: () => void;
   onBrowse: () => void;
+  onSignUp: () => void;
+  onLogIn: () => void;
 }) {
   return (
     <div className="@container h-full overflow-y-auto bg-[#fbf7f2] text-stone-900">
@@ -47,7 +53,7 @@ export default function Welcome({
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
-              {signedIn ? (
+              {signedIn && hasProfile ? (
                 <button
                   type="button"
                   onClick={onPost}
@@ -58,23 +64,24 @@ export default function Welcome({
               ) : (
                 <button
                   type="button"
-                  onClick={onBrowse}
+                  onClick={onSignUp}
                   className={`flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 text-[15px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(194,65,12,0.6)] transition hover:bg-orange-700 active:translate-y-px ${focusRing}`}
                 >
-                  Browse the feed <ArrowRight className="h-4 w-4" />
+                  {signedIn ? "Create your profile" : "Create your account"} <ArrowRight className="h-4 w-4" />
                 </button>
               )}
-              {signedIn ? (
-                <button type="button" onClick={onBrowse} className={`rounded text-[14px] font-medium text-stone-700 underline-offset-4 hover:underline ${focusRing}`}>
-                  Just browse for now
-                </button>
-              ) : (
-                <a href="/login" className={`rounded text-[14px] font-medium text-stone-700 underline-offset-4 hover:underline ${focusRing}`}>
-                  Sign in to post and vote
-                </a>
-              )}
+              <button type="button" onClick={onBrowse} className={`rounded text-[14px] font-medium text-stone-700 underline-offset-4 hover:underline ${focusRing}`}>
+                Just browse for now
+              </button>
             </div>
-            {!signedIn && <p className="mt-3 text-[12.5px] text-stone-500">Anyone can browse. Posting and voting need a free account.</p>}
+            {!signedIn && (
+              <p className="mt-3 text-[12.5px] text-stone-500">
+                Anyone can browse. Posting and voting need a free account.{" "}
+                <button type="button" onClick={onLogIn} className={`rounded font-semibold text-orange-700 underline-offset-4 hover:underline ${focusRing}`}>
+                  Already have one? Log in
+                </button>
+              </p>
+            )}
           </div>
 
           <SamplePost />

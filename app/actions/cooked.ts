@@ -21,6 +21,18 @@ async function myVotesFor(supabase: Supabase, captionIds: string[]) {
   return Object.fromEntries((data ?? []).map((v) => [v.caption_id, v.value as 1 | -1]));
 }
 
+// Attach each author's cooked.ai profile (@username, display name, avatar).
+async function withAuthors(supabase: Supabase, posts: PhotoPost[]): Promise<PhotoPost[]> {
+  const ids = [...new Set(posts.map((p) => p.author_id))];
+  if (!ids.length) return posts;
+  const { data } = await supabase.from("cooked_profiles").select("user_id, username, display_name, avatar_path").in("user_id", ids);
+  const byId = new Map((data ?? []).map((p) => [p.user_id as string, p]));
+  return posts.map((p) => {
+    const a = byId.get(p.author_id);
+    return { ...p, author: a ? { username: a.username, display_name: a.display_name, avatar_path: a.avatar_path } : null };
+  });
+}
+
 function sortCaptions(post: PhotoPost): PhotoPost {
   return { ...post, captions: [...post.captions].sort((a, b) => a.position - b.position) };
 }
@@ -48,7 +60,7 @@ export async function listPhotos(tab: FeedTab): Promise<Feed> {
 
   const { data, error } = await query;
   if (error) return { posts: [], myVotes: {}, userId: user?.id ?? null, error: error.message };
-  let posts = ((data ?? []) as PhotoPost[]).map(sortCaptions);
+  let posts = await withAuthors(supabase, ((data ?? []) as PhotoPost[]).map(sortCaptions));
   if (tab === "hot") {
     const now = Date.now();
     posts = posts.sort((a, b) => hotness(b, now) - hotness(a, now)).slice(0, 40);
@@ -68,7 +80,7 @@ export async function getPhoto(id: string): Promise<{ post: PhotoPost | null; my
   } = await supabase.auth.getUser();
   const { data } = await supabase.from("photos").select(PHOTO_COLUMNS).eq("id", id).maybeSingle();
   if (!data) return { post: null, myVotes: {} };
-  const post = sortCaptions(data as PhotoPost);
+  const [post] = await withAuthors(supabase, [sortCaptions(data as PhotoPost)]);
   return { post, myVotes: user ? await myVotesFor(supabase, post.captions.map((c) => c.id)) : {} };
 }
 
@@ -103,6 +115,8 @@ export async function voteOnCaption(captionId: string, value: 1 | -1 | 0): Promi
   const fail = (error: string): CaptionVoteResult => ({ ok: false, error, caption: null, myVote: 0 });
   if (!user) return fail("Sign in to vote.");
   if (![1, -1, 0].includes(value)) return fail("Invalid vote.");
+  const { data: me } = await supabase.from("cooked_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
+  if (!me) return fail("Create your cooked.ai profile to vote.");
 
   const { data: caption } = await supabase.from("captions").select("photo_id, photos(author_id)").eq("id", captionId).maybeSingle();
   if (!caption) return fail("That caption no longer exists.");

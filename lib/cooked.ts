@@ -16,6 +16,29 @@ export type Caption = {
   score: number;
 };
 
+// A cooked.ai profile: public, separate from the Mac account's name.
+export type CookedProfile = {
+  user_id: string;
+  username: string;
+  display_name: string;
+  avatar_path: string | null;
+};
+
+export function normaliseUsername(raw: string) {
+  return raw.trim().replace(/^@/, "").toLowerCase();
+}
+
+const RESERVED = new Set(["admin", "cooked", "cookedai", "support", "root", "help", "moderator", "official", "staff"]);
+
+// Returns what's wrong with a username, or null if it's fine.
+export function usernameProblem(username: string): string | null {
+  if (username.length < 3) return "Usernames need at least 3 characters.";
+  if (username.length > 20) return "Usernames can be at most 20 characters.";
+  if (!/^[a-z0-9_]+$/.test(username)) return "Use only lowercase letters, numbers and _.";
+  if (RESERVED.has(username)) return `@${username} is reserved.`;
+  return null;
+}
+
 export type PhotoPost = {
   id: string;
   author_id: string;
@@ -26,6 +49,7 @@ export type PhotoPost = {
   score: number;
   created_at: string;
   captions: Caption[];
+  author?: Pick<CookedProfile, "username" | "display_name" | "avatar_path"> | null;
 };
 
 export const PHOTO_COLUMNS =

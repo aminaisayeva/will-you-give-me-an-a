@@ -16,10 +16,10 @@ const COOKING_STEPS = [
 export type ComposerHandle = { pick: () => void };
 
 // Collapsed: one slim bar. With a photo chosen: preview, context and "Cook it".
-const Composer = forwardRef<ComposerHandle, { signedIn: boolean; onPosted: (id: string) => void }>(function Composer(
-  { signedIn, onPosted },
-  ref,
-) {
+const Composer = forwardRef<
+  ComposerHandle,
+  { signedIn: boolean; hasProfile: boolean; onNeedAccount: () => void; onPosted: (id: string) => void }
+>(function Composer({ signedIn, hasProfile, onNeedAccount, onPosted }, ref) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -41,16 +41,18 @@ const Composer = forwardRef<ComposerHandle, { signedIn: boolean; onPosted: (id: 
     return () => window.clearInterval(id);
   }, [cooking]);
 
-  if (!signedIn) {
+  if (!signedIn || !hasProfile) {
     return (
       <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-stone-200">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
           <ImagePlus className="h-4.5 w-4.5" />
         </span>
-        <p className="min-w-0 flex-1 text-[14px] text-stone-700">Want your own pics roasted? Sign in to post and vote.</p>
-        <a href="/login" className={`rounded-lg bg-stone-900 px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-stone-700 ${focusRing}`}>
-          Sign in
-        </a>
+        <p className="min-w-0 flex-1 text-[14px] text-stone-700">
+          {signedIn ? "Pick a @username to start posting and voting." : "Want your own pics roasted? Create a free account to post and vote."}
+        </p>
+        <button type="button" onClick={onNeedAccount} className={`rounded-lg bg-stone-900 px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-stone-700 ${focusRing}`}>
+          {signedIn ? "Create profile" : "Sign up"}
+        </button>
       </div>
     );
   }
