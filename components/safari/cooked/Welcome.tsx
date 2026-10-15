@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ChevronUp, Flame } from "lucide-react";
+import { ArrowRight, Camera, ChevronUp, Flame, Globe, ScrollText, Undo2 } from "lucide-react";
 import { focusRing, VOICES } from "./shared";
 
 const SAMPLE = [
@@ -14,6 +14,13 @@ const STEPS = [
   { title: "Post a photo", text: "Your dorm, your lunch, your 1 train commute. Add a line of context if you want." },
   { title: "AI writes four captions", text: "Google Gemini looks at the photo and roasts it in four different voices." },
   { title: "Everyone votes", text: "Upvote the caption that cooked hardest. The winner gets the COOKED flag; the day’s best caption gets the banner." },
+];
+
+const GOOD_TO_KNOW = [
+  { icon: Globe, title: "Posts are public", text: "Don’t post people without asking." },
+  { icon: Undo2, title: "Votes can change", text: "Tap the same arrow to undo." },
+  { icon: Camera, title: "15 pics a day", text: "Per person, so the oven stays cool." },
+  { icon: ScrollText, title: "See the prompt", text: "Every post shows what the AI was asked." },
 ];
 
 // First-visit landing page for cooked.ai.
@@ -105,42 +112,43 @@ export default function Welcome({
           </ol>
         </section>
 
-        {/* Voices + good to know */}
-        <section className="mt-14 grid gap-10 @3xl:grid-cols-[1.4fr_1fr]">
-          <div>
-            <h2 className="text-[20px] font-bold tracking-tight">The four voices</h2>
-            <ul className="mt-4 grid gap-x-6 gap-y-4 @xl:grid-cols-2">
-              {VOICES.map((v) => (
-                <li key={v.style} className="flex gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[20px] shadow-sm ring-1 ring-stone-200" aria-hidden="true">
-                    {v.emoji}
-                  </span>
-                  <div>
-                    <p className="text-[14px] font-semibold">{v.style}</p>
-                    <p className="text-[13px] text-stone-600">{v.line}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h2 className="text-[20px] font-bold tracking-tight">Good to know</h2>
-            <ul className="mt-4 space-y-2.5 text-[13.5px] leading-relaxed text-stone-600">
-              <li>
-                <strong className="font-semibold text-stone-800">Posts are public.</strong> Everyone on the site can see your photo and its captions. Don’t post other
-                people without asking.
+        {/* The four voices: its own section; swipeable on narrow screens */}
+        <section className="mt-16" aria-labelledby="voices">
+          <h2 id="voices" className="text-[20px] font-bold tracking-tight">
+            The four voices
+          </h2>
+          <p className="mt-1 text-[13.5px] text-stone-600">Every photo gets one caption from each.</p>
+          <ul className="-mx-6 mt-5 flex snap-x snap-mandatory scroll-px-6 gap-3 overflow-x-auto px-6 pb-2 @3xl:mx-0 @3xl:grid @3xl:grid-cols-4 @3xl:overflow-visible @3xl:px-0">
+            {VOICES.map((v) => (
+              <li key={v.style} className="w-44 shrink-0 snap-start rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 @3xl:w-auto">
+                <span className="text-[28px] leading-none" aria-hidden="true">
+                  {v.emoji}
+                </span>
+                <p className="mt-3 text-[14px] font-semibold leading-tight">{v.style}</p>
+                <p className="mt-1 text-[13px] leading-snug text-stone-600">{v.line}</p>
               </li>
-              <li>
-                <strong className="font-semibold text-stone-800">You can change your vote</strong> any time: click the same arrow again to take it back.
+            ))}
+          </ul>
+        </section>
+
+        {/* Good to know: short tiles, one idea each */}
+        <section className="mt-14" aria-labelledby="good-to-know">
+          <h2 id="good-to-know" className="text-[20px] font-bold tracking-tight">
+            Good to know
+          </h2>
+          <ul className="mt-5 grid gap-3 @lg:grid-cols-2 @4xl:grid-cols-4">
+            {GOOD_TO_KNOW.map((g) => (
+              <li key={g.title} className="flex items-start gap-3 rounded-2xl bg-white/70 p-4 ring-1 ring-stone-200">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
+                  <g.icon className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-[14px] font-semibold leading-tight">{g.title}</p>
+                  <p className="mt-1 text-[13px] leading-snug text-stone-600">{g.text}</p>
+                </div>
               </li>
-              <li>
-                <strong className="font-semibold text-stone-800">15 pics a day</strong> per person, so the oven doesn’t overheat.
-              </li>
-              <li>
-                <strong className="font-semibold text-stone-800">See the prompt.</strong> Every post shows exactly what was sent to the AI.
-              </li>
-            </ul>
-          </div>
+            ))}
+          </ul>
         </section>
       </div>
     </div>

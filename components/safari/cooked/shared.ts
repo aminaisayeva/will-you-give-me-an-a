@@ -5,10 +5,10 @@ import { useSyncExternalStore } from "react";
 // The four caption voices, as shown to people (must match CAPTION_STYLES in
 // lib/gemini.ts).
 export const VOICES = [
-  { style: "Chronically Online", emoji: "\u{1F480}", line: "lowercase, terminally online, reaction-meme energy" },
-  { style: "Midwest Mom", emoji: "\u{1F33D}", line: "supportive, slightly worried, casserole energy" },
-  { style: "Real New Yorker", emoji: "\u{1F5FD}", line: "blunt, unimpressed, has seen it all" },
-  { style: "Columbia Tour Guide", emoji: "\u{1F981}", line: "walking backwards, makes everything sound prestigious" },
+  { style: "Chronically Online", emoji: "\u{1F480}", line: "Speaks fluent meme." },
+  { style: "Midwest Mom", emoji: "\u{1F33D}", line: "Proud, worried, sending casserole." },
+  { style: "Real New Yorker", emoji: "\u{1F5FD}", line: "Unimpressed. Has seen worse." },
+  { style: "Columbia Tour Guide", emoji: "\u{1F981}", line: "Makes everything sound prestigious." },
 ];
 
 // Has this browser seen the cooked.ai welcome screen? (localStorage)
