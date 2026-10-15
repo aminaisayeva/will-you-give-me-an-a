@@ -49,7 +49,9 @@ export default function Cooked() {
     };
   }, [accountId, meVersion]);
 
+  // After signing up, logging in or creating a profile: straight to the feed.
   const reloadMe = () => {
+    setWelcomed(true);
     setMeVersion((v) => v + 1);
     setRefreshKey((k) => k + 1);
   };

@@ -18,7 +18,7 @@ import { rememberReturnTo } from "@/lib/return-to";
 import { avatarUrl, MIN_PASSWORD } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/client";
 import type { AuthMode } from "./account";
-import { focusRing } from "./shared";
+import { focusRing, setWelcomed } from "./shared";
 
 const field =
   "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-[14px] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-orange-500 focus:ring-[3px] focus:ring-orange-200";
@@ -131,6 +131,7 @@ function GoogleButton() {
       onClick={async () => {
         setPending(true);
         rememberReturnTo("/safari/cooked.ai");
+        setWelcomed(true);
         await createClient().auth.signInWithOAuth({
           provider: "google",
           options: { redirectTo: `${window.location.origin}/auth/callback`, queryParams: { prompt: "select_account" } },
@@ -213,6 +214,7 @@ function SignUp({ onMode, onClose, onChanged }: { onMode: (m: AuthMode) => void;
           setPending(true);
           setError(null);
           rememberReturnTo("/safari/cooked.ai");
+          setWelcomed(true);
           const res = await cookedSignUp({ firstName: first, lastName: last, username, email, password });
           setPending(false);
           if (!res.ok) return setError(res.error);
