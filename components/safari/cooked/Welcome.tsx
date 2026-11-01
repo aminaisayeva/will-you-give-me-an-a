@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Camera, ChevronUp, Flame, Globe, ScrollText, Undo2 } from "lucide-react";
+import { ArrowRight, Camera, ChevronUp, Crown, Flame, Globe, Heart, ScrollText, Undo2 } from "lucide-react";
 import { focusRing, VOICES } from "./shared";
 
 const SAMPLE = [
@@ -21,6 +21,8 @@ const GOOD_TO_KNOW = [
   { icon: Undo2, title: "Votes can change", text: "Tap the same arrow to undo." },
   { icon: Camera, title: "15 pics a day", text: "Per person, so the oven stays cool." },
   { icon: ScrollText, title: "See the prompt", text: "Every post shows what the AI was asked." },
+  { icon: Crown, title: "Voice League", text: "The voices compete weekly. And they know the score." },
+  { icon: Heart, title: "Find your team", text: "Your upvotes reveal which voice you laugh at most." },
 ];
 
 // First-visit landing page for cooked.ai.
@@ -188,7 +190,7 @@ export function WelcomeSections() {
           <h2 id="good-to-know" className="text-[20px] font-bold tracking-tight">
             Good to know
           </h2>
-          <ul className="mt-5 grid gap-3 @lg:grid-cols-2 @4xl:grid-cols-4">
+          <ul className="mt-5 grid gap-3 @lg:grid-cols-2 @4xl:grid-cols-3">
             {GOOD_TO_KNOW.map((g) => (
               <li key={g.title} className="flex items-start gap-3 rounded-2xl bg-white/70 p-4 ring-1 ring-stone-200">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-700">

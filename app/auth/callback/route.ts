@@ -19,6 +19,10 @@ export async function GET(request: NextRequest) {
   const fail = (message: string) =>
     NextResponse.redirect(`${base}/login?error=${encodeURIComponent(message)}`);
 
+  // A Google account outside the allowed sign-up domains (a database trigger).
+  if (oauthError && /database error saving new user/i.test(oauthError)) {
+    return fail("cooked.ai sign-ups are limited to approved school emails (like @columbia.edu). Use your school Google account.");
+  }
   if (oauthError) return fail(oauthError);
   if (!code) return fail("Missing sign-in code. Please try again.");
 

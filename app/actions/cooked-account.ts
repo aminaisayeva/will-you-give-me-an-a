@@ -137,6 +137,9 @@ export type AuthResult = { ok: boolean; error: string | null; needsConfirmation?
 
 // Sign up from inside cooked.ai. It's the same account as the Mac, so this
 // also signs you into the desktop.
+// The admin area's allowed domains / whitelist (enforced in the database).
+const SIGNUP_CLOSED = "cooked.ai sign-ups are limited to approved school emails (like @columbia.edu). Use your school email.";
+
 export async function cookedSignUp(input: {
   firstName: string;
   lastName: string;
@@ -157,6 +160,8 @@ export async function cookedSignUp(input: {
 
   const supabase = await createClient();
   if (await usernameTaken(supabase, username)) return { ok: false, error: `@${username} is taken. Try another one.` };
+  const { data: allowed } = await supabase.rpc("signup_allowed", { email });
+  if (allowed === false) return { ok: false, error: SIGNUP_CLOSED };
 
   const h = await headers();
   const origin = h.get("origin") ?? `https://${h.get("x-forwarded-host") ?? h.get("host")}`;
@@ -168,7 +173,7 @@ export async function cookedSignUp(input: {
       emailRedirectTo: `${origin}/auth/callback`,
     },
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: /database error saving new user/i.test(error.message) ? SIGNUP_CLOSED : error.message };
   if (!data.session) return { ok: true, error: null, needsConfirmation: true };
 
   await supabase.from("cooked_profiles").insert({ username, display_name: `${firstName} ${lastName}`.slice(0, 40) });

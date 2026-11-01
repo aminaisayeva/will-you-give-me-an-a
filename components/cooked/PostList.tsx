@@ -37,6 +37,7 @@ export default function PostList({ me, initial, empty }: { me: MyCookedAccount; 
               post={post}
               myVotes={feed.myVotes}
               userId={feed.userId}
+              champion={feed.champion}
               fresh={false}
               onVoted={updateCaption}
               onDeleted={() => setFeed((f) => ({ ...f, posts: f.posts.filter((p) => p.id !== post.id) }))}

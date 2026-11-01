@@ -17,6 +17,7 @@ export default function PostCard({
   post,
   myVotes,
   userId,
+  champion = null,
   fresh,
   rank,
   onVoted,
@@ -25,6 +26,7 @@ export default function PostCard({
   post: PhotoPost;
   myVotes: Record<string, 1 | -1>;
   userId: string | null;
+  champion?: string | null;
   fresh: boolean;
   rank?: number;
   onVoted: (caption: Caption, myVote: 1 | -1 | 0) => void;
@@ -89,6 +91,7 @@ export default function PostCard({
                 key={caption.id}
                 caption={caption}
                 best={caption.id === best?.id}
+                crowned={caption.style === champion}
                 myVote={myVotes[caption.id] ?? 0}
                 userId={userId}
                 mine={mine}
@@ -145,6 +148,7 @@ export default function PostCard({
 function CaptionRow({
   caption,
   best,
+  crowned,
   myVote,
   userId,
   mine,
@@ -152,6 +156,7 @@ function CaptionRow({
 }: {
   caption: Caption;
   best: boolean;
+  crowned: boolean;
   myVote: 1 | -1 | 0;
   userId: string | null;
   mine: boolean;
@@ -188,6 +193,11 @@ function CaptionRow({
           <p className="flex items-center gap-1.5 text-[12px] font-semibold text-stone-500">
             <span aria-hidden="true">{STYLE_EMOJI[caption.style] ?? "\u{1F525}"}</span>
             {caption.style}
+            {crowned && (
+              <span title="Last week's Voice of the Week" aria-label="Voice of the Week">
+                {"\u{1F451}"}
+              </span>
+            )}
             {best && <span className="rounded-sm bg-orange-600 px-1.5 text-[10px] font-bold tracking-wide text-white">COOKED</span>}
           </p>
           <p className="mt-0.5 text-[15px] leading-snug text-stone-900">{caption.text}</p>

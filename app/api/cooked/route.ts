@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { CAPTION_SYSTEM_PROMPT, captionPhoto, GeminiError } from "@/lib/gemini";
+import { GeminiError } from "@/lib/gemini";
 import { DAILY_PHOTO_LIMIT, MAX_CONTEXT, PHOTO_BUCKET } from "@/lib/cooked";
+import { linkRequestToPhoto, runCaptionPipeline } from "@/lib/pipeline";
 import { MAX_AVATAR_BYTES } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,8 +11,8 @@ const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png",
 const json = (body: Record<string, unknown>, status = 200) => NextResponse.json(body, { status });
 
 // POST multipart { image, context? } -> { id }. Stores the photo in Storage,
-// asks Gemini for captions, and saves the photo row (with the prompt) and
-// its captions.
+// runs a prompt chain for the captions (logged for the admin area), and
+// saves the photo row (with the prompt) and its captions.
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   let result;
   try {
-    result = await captionPhoto({ mimeType: image.type, base64: bytes.toString("base64") }, context);
+    result = await runCaptionPipeline(supabase, { image: { mimeType: image.type, base64: bytes.toString("base64") }, context, source: "app" });
   } catch (err) {
     console.error("captioning failed", err);
     return json({ error: err instanceof GeminiError ? err.message : "Couldn't cook that pic. Try again." }, 502);
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
 
   const { data: photo, error: photoError } = await supabase
     .from("photos")
-    .insert({ image_path: path, prompt: context, system_prompt: CAPTION_SYSTEM_PROMPT, model: result.model })
+    .insert({ image_path: path, prompt: context, system_prompt: result.systemPrompt, model: result.model, chain_id: result.chainId })
     .select("id")
     .single();
   if (photoError || !photo) {
@@ -80,5 +81,6 @@ export async function POST(request: NextRequest) {
     return json({ error: `Couldn't save the captions: ${captionError.message}` }, 500);
   }
 
+  await linkRequestToPhoto(supabase, result.requestId, photo.id);
   return json({ id: photo.id });
 }

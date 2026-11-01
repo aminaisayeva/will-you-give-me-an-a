@@ -122,7 +122,7 @@ export default function Cooked() {
     setFeed((f) =>
       f
         ? { ...f, posts: [post, ...f.posts.filter((p) => p.id !== id)], myVotes: { ...f.myVotes, ...myVotes } }
-        : { posts: [post], myVotes, userId: account?.id ?? null, error: null },
+        : { posts: [post], myVotes, userId: account?.id ?? null, champion: null, error: null },
     );
     setFresh(id);
   };

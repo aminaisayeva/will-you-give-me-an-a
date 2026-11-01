@@ -7,7 +7,8 @@ import { CookedAccountProvider, type AuthMode } from "@/components/safari/cooked
 import Composer, { type ComposerHandle } from "@/components/safari/cooked/Composer";
 import PostCard from "@/components/safari/cooked/PostCard";
 import { focusRing } from "@/components/safari/cooked/shared";
-import { cookOfTheDay, getPhoto, listPhotos, type CookOfTheDay, type Feed as FeedData, type FeedTab } from "@/app/actions/cooked";
+import VoiceLeague from "@/components/cooked/VoiceLeague";
+import { cookOfTheDay, getPhoto, leagueBoard, listPhotos, type CookOfTheDay, type Feed as FeedData, type FeedTab, type LeagueBoard } from "@/app/actions/cooked";
 import type { MyCookedAccount } from "@/app/actions/cooked-account";
 import type { Caption } from "@/lib/cooked";
 
@@ -20,6 +21,7 @@ export default function Feed({ me }: { me: MyCookedAccount }) {
   const [feed, setFeed] = useState<FeedData | null>(null);
   const [loading, setLoading] = useState(true);
   const [daily, setDaily] = useState<CookOfTheDay>(null);
+  const [board, setBoard] = useState<LeagueBoard | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [fresh, setFresh] = useState<string | null>(null);
   const composerRef = useRef<ComposerHandle>(null);
@@ -28,10 +30,11 @@ export default function Feed({ me }: { me: MyCookedAccount }) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([listPhotos(tab), cookOfTheDay()]).then(([result, top]) => {
+    Promise.all([listPhotos(tab), cookOfTheDay(), leagueBoard()]).then(([result, top, league]) => {
       if (cancelled) return;
       setFeed(result);
       setDaily(top);
+      setBoard(league);
       setLoading(false);
     });
     return () => {
@@ -62,7 +65,7 @@ export default function Feed({ me }: { me: MyCookedAccount }) {
     setFeed((f) =>
       f
         ? { ...f, posts: [post, ...f.posts.filter((p) => p.id !== id)], myVotes: { ...f.myVotes, ...myVotes } }
-        : { posts: [post], myVotes, userId: me.profile?.user_id ?? null, error: null },
+        : { posts: [post], myVotes, userId: me.profile?.user_id ?? null, champion: null, error: null },
     );
     setFresh(id);
   };
@@ -89,6 +92,12 @@ export default function Feed({ me }: { me: MyCookedAccount }) {
         <div id="post" className="mt-4 scroll-mt-24">
           <Composer ref={composerRef} signedIn={me.signedIn} hasProfile={hasProfile} onNeedAccount={startPost} onPosted={onPosted} />
         </div>
+
+        {board && (
+          <div className="mt-6">
+            <VoiceLeague board={board} username={me.profile?.username ?? null} />
+          </div>
+        )}
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
           <nav aria-label="Sort posts" className="flex rounded-xl bg-stone-200/70 p-0.5">
@@ -128,6 +137,7 @@ export default function Feed({ me }: { me: MyCookedAccount }) {
                   post={post}
                   myVotes={feed.myVotes}
                   userId={feed.userId}
+                  champion={feed.champion}
                   fresh={post.id === fresh}
                   rank={tab === "top" || tab === "hot" ? i + 1 : undefined}
                   onVoted={updateCaption}

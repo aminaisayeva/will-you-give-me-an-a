@@ -1,6 +1,7 @@
 "use server";
 
 import { PHOTO_BUCKET, PHOTO_COLUMNS, type Caption, type PhotoPost } from "@/lib/cooked";
+import { reigningChampion, TEAM_MIN_UPVOTES, voiceLeague, voiceTaste, type League, type Taste } from "@/lib/league";
 import { createClient } from "@/lib/supabase/server";
 
 export type FeedTab = "hot" | "new" | "top" | "mine";
@@ -9,6 +10,8 @@ export type Feed = {
   posts: PhotoPost[];
   myVotes: Record<string, 1 | -1>;
   userId: string | null;
+  // Last week's Voice of the Week; its captions wear a crown.
+  champion: string | null;
   error: string | null;
 };
 
@@ -48,7 +51,7 @@ export async function listPhotos(tab: FeedTab): Promise<Feed> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (tab === "mine" && !user) return { posts: [], myVotes: {}, userId: null, error: null };
+  if (tab === "mine" && !user) return { posts: [], myVotes: {}, userId: null, champion: null, error: null };
 
   let query = supabase.from("photos").select(PHOTO_COLUMNS);
   if (tab === "top") query = query.order("score", { ascending: false }).order("created_at", { ascending: false }).limit(40);
@@ -58,8 +61,8 @@ export async function listPhotos(tab: FeedTab): Promise<Feed> {
     query = query.gte("created_at", weekAgo).order("created_at", { ascending: false }).limit(100);
   } else query = query.order("created_at", { ascending: false }).limit(40);
 
-  const { data, error } = await query;
-  if (error) return { posts: [], myVotes: {}, userId: user?.id ?? null, error: error.message };
+  const [{ data, error }, champion] = await Promise.all([query, reigningChampion(supabase)]);
+  if (error) return { posts: [], myVotes: {}, userId: user?.id ?? null, champion, error: error.message };
   let posts = await withAuthors(supabase, ((data ?? []) as PhotoPost[]).map(sortCaptions));
   if (tab === "hot") {
     const now = Date.now();
@@ -69,6 +72,7 @@ export async function listPhotos(tab: FeedTab): Promise<Feed> {
     posts,
     myVotes: user ? await myVotesFor(supabase, posts.flatMap((p) => p.captions.map((c) => c.id))) : {},
     userId: user?.id ?? null,
+    champion,
     error: null,
   };
 }
@@ -77,6 +81,7 @@ export type ProfilePage = {
   profile: { user_id: string; username: string; display_name: string; avatar_path: string | null; created_at: string };
   feed: Feed;
   totalScore: number;
+  taste: Taste;
 } | null;
 
 // A public /u/<username> page: their profile and their posts.
@@ -91,20 +96,21 @@ export async function profilePage(rawUsername: string): Promise<ProfilePage> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data, error } = await supabase
-    .from("photos")
-    .select(PHOTO_COLUMNS)
-    .eq("author_id", profile.user_id)
-    .order("created_at", { ascending: false })
-    .limit(60);
+  const [{ data, error }, champion, taste] = await Promise.all([
+    supabase.from("photos").select(PHOTO_COLUMNS).eq("author_id", profile.user_id).order("created_at", { ascending: false }).limit(60),
+    reigningChampion(supabase),
+    voiceTaste(supabase, profile.user_id),
+  ]);
   const posts = await withAuthors(supabase, ((data ?? []) as PhotoPost[]).map(sortCaptions));
   return {
     profile,
     totalScore: posts.reduce((sum, p) => sum + p.score, 0),
+    taste,
     feed: {
       posts,
       myVotes: user ? await myVotesFor(supabase, posts.flatMap((p) => p.captions.map((c) => c.id))) : {},
       userId: user?.id ?? null,
+      champion,
       error: error?.message ?? null,
     },
   };
@@ -119,6 +125,23 @@ export async function getPhoto(id: string): Promise<{ post: PhotoPost | null; my
   if (!data) return { post: null, myVotes: {} };
   const [post] = await withAuthors(supabase, [sortCaptions(data as PhotoPost)]);
   return { post, myVotes: user ? await myVotesFor(supabase, post.captions.map((c) => c.id)) : {} };
+}
+
+export type LeagueBoard = { league: League; champion: string | null; myTeam: { voice: string; share: number } | null };
+
+// The Voice League table on the feed, plus your team if you've voted enough.
+export async function leagueBoard(): Promise<LeagueBoard> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const [league, champion, taste] = await Promise.all([
+    voiceLeague(supabase),
+    reigningChampion(supabase),
+    user ? voiceTaste(supabase, user.id) : Promise.resolve([] as Taste),
+  ]);
+  const total = taste.reduce((s, t) => s + t.upvotes, 0);
+  return { league, champion, myTeam: total >= TEAM_MIN_UPVOTES ? { voice: taste[0].voice, share: taste[0].share } : null };
 }
 
 export type CookOfTheDay = { caption: Caption; post: PhotoPost } | null;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import PostList from "@/components/cooked/PostList";
+import VoiceTaste from "@/components/cooked/VoiceTaste";
 import { profilePage } from "@/app/actions/cooked";
 import { getCookedSession } from "@/lib/cooked-session";
 import { avatarUrl } from "@/lib/supabase";
@@ -17,7 +18,7 @@ export default async function UserPage({ params }: PageProps<"/u/[username]">) {
   const { username } = await params;
   const [page, session] = await Promise.all([profilePage(username), getCookedSession()]);
   if (!page) notFound();
-  const { profile, feed, totalScore } = page;
+  const { profile, feed, totalScore, taste } = page;
   const isMe = session?.userId === profile.user_id;
   const joined = new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
@@ -45,6 +46,8 @@ export default async function UserPage({ params }: PageProps<"/u/[username]">) {
           </Link>
         )}
       </section>
+
+      <VoiceTaste taste={taste} isMe={isMe} username={profile.username} />
 
       <h2 className="mt-10 text-[18px] font-bold text-stone-900">{isMe ? "Your posts" : "Posts"}</h2>
       <PostList
